@@ -1,0 +1,72 @@
+/* src/components/ScrollToTopButton.css */
+.scroll-to-top {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  z-index: 999;
+}
+
+.scroll-btn {
+  background-color: #d8705c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(216, 112, 92, 0.3);
+  transition: all 0.3s ease;
+  
+  /* Підготовка для ідеального центрування іконки */
+  position: relative; 
+  overflow: hidden;
+  
+  /* Плавна анімація появи */
+  animation: popIn 0.3s ease-out forwards;
+}
+
+/* ІДЕАЛЬНЕ ЦЕНТРУВАННЯ СТРІЛОЧКИ */
+.scroll-btn svg {
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  display: block;
+}
+
+.scroll-btn:hover {
+  background-color: #c56b4a; /* Трохи темніший при наведенні */
+  transform: translateY(-4px); /* Кнопка "підстрибує" */
+  box-shadow: 0 6px 16px rgba(216, 112, 92, 0.4);
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Робимо кнопку трохи меншою і ближчою до краю на телефонах */
+@media (max-width: 768px) {
+  .scroll-to-top {
+    bottom: 20px;
+    right: 20px;
+  }
+  .scroll-btn {
+    width: 45px;
+    height: 45px;
+  }
+  /* Трохи зменшуємо стрілочку для мобільної кнопки */
+  .scroll-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}

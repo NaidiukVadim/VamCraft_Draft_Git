@@ -1,0 +1,659 @@
+/* src/pages/Admin.css */
+
+/* =========================================
+   ОСНОВНИЙ ЛЕЙАУТ
+========================================= */
+.admin-page {
+  display: flex;
+  min-height: 80vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+  gap: 20px;
+}
+
+/* =========================================
+   САЙДБАР (БОКОВЕ МЕНЮ)
+========================================= */
+.admin-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.admin-sidebar h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.admin-sidebar button {
+  padding: 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.2s;
+  color: #000;
+}
+
+.admin-sidebar button:hover {
+  background-color: #f0e5de;
+}
+
+.admin-sidebar button.active {
+  background-color: #d8705c;
+  color: white;
+  font-weight: bold;
+}
+
+/* =========================================
+   КОНТЕНТНА ЧАСТИНА
+========================================= */
+.admin-content {
+  flex: 1;
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.admin-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-section-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
+}
+
+/* =========================================
+   КНОПКИ ТА УТИЛІТИ
+========================================= */
+.add-new-btn {
+  background-color: #d8705c;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.add-new-btn:hover {
+  background-color: #b05847;
+}
+
+.back-btn {
+  background-color: #eee;
+  color: #333;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.back-btn:hover {
+  background-color: #ddd;
+}
+
+.btn-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* =========================================
+   ТАБЛИЦІ
+========================================= */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 14px 12px;
+  font-size: 16px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.admin-table th {
+  background-color: #fcfcfc;
+  color: #777;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.admin-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.orders-table .expanded-row td {
+  border-bottom: none;
+  background-color: #f9f9f9;
+}
+
+.price-cell {
+  font-weight: bold;
+  color: #2c3e50;
+  white-space: nowrap;
+}
+
+.text-muted {
+  color: #7f8c8d;
+  font-size: 0.9em;
+}
+
+/* =========================================
+   СТАТУСИ (ОБ'ЄДНАНІ)
+========================================= */
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.status-badge.active {
+  background-color: #f6ffed;
+  color: #389e0d;
+  border: 1px solid #b7eb8f;
+}
+
+.status-new {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #bbdefb;
+}
+
+.status-processing {
+  background-color: #fff3e0;
+  color: #ef6c00;
+  border: 1px solid #ffe0b2;
+}
+
+.status-sent {
+  background-color: #e6f7ff;
+  color: #096dd9;
+  border: 1px solid #91d5ff;
+}
+
+.status-completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.status-cancelled {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+/* =========================================
+   КНОПКИ ДІЙ В ТАБЛИЦІ
+========================================= */
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-edit,
+.btn-disable,
+.btn-view {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.btn-edit {
+  background-color: #e6f7ff;
+  color: #0050b3;
+}
+
+.btn-edit:hover {
+  background-color: #bae0ff;
+}
+
+.btn-disable {
+  background-color: #fff1f0;
+  color: #cf1322;
+}
+
+.btn-disable:hover {
+  background-color: #ffa39e;
+}
+
+.btn-view {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.btn-view:hover {
+  background-color: #7f8c8d;
+}
+
+.status-select-inline {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 0.9em;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+/* =========================================
+   ДЕТАЛІ ЗАМОВЛЕННЯ ТА ВКЛАДКИ
+========================================= */
+.order-tabs-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #eee;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.order-tab {
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: -2px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-weight: normal;
+  color: #555;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+
+.order-tab:hover {
+  background-color: #eaeaea;
+}
+
+.order-tab.active {
+  background: #fff;
+  border-bottom: 2px solid #fff;
+  font-weight: bold;
+  color: #d8705c;
+}
+
+.order-details-row td {
+  padding: 0;
+  background-color: #f9f9f9;
+}
+
+.order-details-container {
+  padding: 15px 20px 20px 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.order-details-container h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.order-details-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.order-item-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed #eee;
+  gap: 10px;
+}
+
+.order-item-detail:last-child {
+  border-bottom: none;
+}
+
+.item-name {
+  flex: 1;
+}
+
+.item-meta {
+  color: #555;
+  white-space: nowrap;
+}
+
+.order-comment {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #fff;
+  border-left: 3px solid #ddd;
+  font-style: italic;
+  color: #555;
+}
+
+.delivery-info-box {
+  margin-bottom: 20px;
+  padding: 12px;
+  font-size: 14px;
+  background-color: #f0f4f8;
+  border-radius: 6px;
+  border-left: 4px solid #d8705c;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+/* =========================================
+   ФОРМИ ТА БАНЕРИ
+========================================= */
+.admin-form-container h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.admin-form {
+  max-width: 600px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: bold;
+  color: #555;
+  font-size: 14px;
+}
+
+.form-group select {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.form-group.checkbox-group {
+  flex-direction: row;
+  align-items: center;
+}
+
+.form-group.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: normal;
+  font-size: 16px;
+}
+
+.form-group.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="tel"],
+.form-group input[type="url"],
+.form-group select,
+.form-group textarea {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #d8705c;
+  outline: none;
+}
+
+.admin-submit-btn {
+  background-color: #d8705c;
+  color: white;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+
+.admin-submit-btn:hover {
+  background-color: #b05847;
+}
+
+.banner-form {
+  max-width: 800px;
+}
+
+.banner-section-block {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.banner-section-title {
+  margin-top: 0;
+  color: #d8705c;
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ: ПЛАНШЕТ (до 1024px)
+========================================= */
+@media (max-width: 1024px) {
+  .admin-page {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .admin-sidebar {
+    width: 200px;
+    padding: 16px;
+    position: static;
+  }
+
+  .admin-sidebar button {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .admin-content {
+    padding: 20px;
+  }
+
+  .admin-section-header h3 {
+    font-size: 20px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ: МОБІЛЬНИЙ (до 768px)
+========================================= */
+@media (max-width: 768px) {
+  .admin-page {
+    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 12px;
+    gap: 6px;
+    border-radius: 10px;
+    align-items: center;
+    position: static;
+  }
+
+  .admin-sidebar h2 {
+    display: none;
+  }
+
+  .admin-sidebar button {
+    white-space: nowrap;
+    padding: 9px 16px;
+    font-size: 14px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+
+  .admin-content {
+    padding: 16px 12px;
+  }
+
+  .admin-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .admin-section-header h3 {
+    font-size: 18px;
+  }
+
+  .add-new-btn,
+  .back-btn {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 16px;
+  }
+
+  .admin-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 13px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .orders-table .col-date {
+    display: none;
+  }
+
+  .actions-cell {
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+  }
+
+  .status-select-inline {
+    width: 100%;
+    font-size: 12px;
+  }
+
+  .order-details-container {
+    padding: 12px;
+  }
+
+  .order-item-detail {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .item-meta {
+    white-space: normal;
+    font-size: 12px;
+  }
+
+  .admin-form {
+    max-width: 100%;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group input[type="tel"],
+  .form-group input[type="url"],
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px;
+  }
+
+  .admin-submit-btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .banner-form,
+  .admin-form[style] {
+    max-width: 100% !important;
+  }
+}
