@@ -3,6 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import './Admin.css';
 
+// ДОДАНО: Імпортуємо стандартні зображення для прев'ю банерів
+import heroImg from '../assets/hero-img.svg?url'; 
+import heroDownImg from '../assets/hero-down-img.png';
+
 function Admin() {
   const { 
     products, sellers, orders, banners, 
@@ -52,6 +56,23 @@ function Admin() {
   const filteredOrders = orderFilter === 'all' 
     ? orders 
     : orders.filter(order => order.status === orderFilter);
+
+  const handleImageUpload = (event, setterFunction, dataKey) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setterFunction(prev => {
+          if (dataKey.includes('.')) {
+            const [obj, key] = dataKey.split('.');
+            return { ...prev, [obj]: { ...prev[obj], [key]: reader.result } };
+          }
+          return { ...prev, [dataKey]: reader.result };
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // ===================== ЛОГІКА ТОВАРІВ =====================
   const handleEditProduct = (product) => {
@@ -223,7 +244,22 @@ function Admin() {
                   <label><input type="checkbox" checked={productData.isRecommended} onChange={(e) => setProductData({...productData, isRecommended: e.target.checked})} />Показувати в "Рекомендованих" на Головній</label>
                 </div>
                 <div className="form-group"><label>Опис:</label><textarea rows="4" required value={productData.description} onChange={(e) => setProductData({...productData, description: e.target.value})}></textarea></div>
-                <div className="form-group"><label>URL Фотографії:</label><input type="text" placeholder="https://..." value={productData.imageUrl} onChange={(e) => setProductData({...productData, imageUrl: e.target.value})} /></div>
+                
+                <div className="form-group">
+                  <label>Фотографія товару:</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* ДОДАНО КЛАС custom-file-input */}
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      className="custom-file-input"
+                      onChange={(e) => handleImageUpload(e, setProductData, 'imageUrl')} 
+                    />
+                    <input type="text" placeholder="Або вставте URL..." value={productData.imageUrl} onChange={(e) => setProductData({...productData, imageUrl: e.target.value})} />
+                  </div>
+                  {productData.imageUrl && <img src={productData.imageUrl} alt="preview" style={{ height: '60px', width: 'auto', marginTop: '10px', borderRadius: '4px', objectFit: 'cover' }} />}
+                </div>
+
                 <button type="submit" className="admin-submit-btn">{editingProductId ? 'Оновити товар' : 'Зберегти товар'}</button>
               </form>
             )}
@@ -286,7 +322,22 @@ function Admin() {
                 <div className="form-group"><label>Опис майстерні:</label><textarea rows="4" required value={sellerData.description} onChange={(e) => setSellerData({...sellerData, description: e.target.value})}></textarea></div>
                 <div className="form-group"><label>Телефон:</label><input type="tel" value={sellerData.phone} onChange={(e) => setSellerData({...sellerData, phone: e.target.value})} /></div>
                 <div className="form-group"><label>Telegram URL:</label><input type="url" value={sellerData.telegram} onChange={(e) => setSellerData({...sellerData, telegram: e.target.value})} /></div>
-                <div className="form-group"><label>URL Логотипу:</label><input type="text" placeholder="https://..." value={sellerData.logoUrl} onChange={(e) => setSellerData({...sellerData, logoUrl: e.target.value})} /></div>
+                
+                <div className="form-group">
+                  <label>Логотип магазину:</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {/* ДОДАНО КЛАС custom-file-input */}
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      className="custom-file-input"
+                      onChange={(e) => handleImageUpload(e, setSellerData, 'logoUrl')} 
+                    />
+                    <input type="text" placeholder="Або вставте URL..." value={sellerData.logoUrl} onChange={(e) => setSellerData({...sellerData, logoUrl: e.target.value})} />
+                  </div>
+                  {sellerData.logoUrl && <img src={sellerData.logoUrl} alt="preview" style={{ height: '60px', width: 'auto', marginTop: '10px', borderRadius: '4px', objectFit: 'cover' }} />}
+                </div>
+
                 <button type="submit" className="admin-submit-btn">{editingSellerId ? 'Оновити продавця' : 'Зберегти продавця'}</button>
               </form>
             )}
@@ -407,41 +458,85 @@ function Admin() {
               <h3>Керування банерами</h3>
             </div>
             
-            <form onSubmit={handleBannerSubmit} className="admin-form banner-form">
+            <form onSubmit={handleBannerSubmit} className="admin-form banner-form" style={{ maxWidth: '100%' }}>
               
-              <div className="banner-section-block">
-                <h4 className="banner-section-title">Верхній банер (Головний екран)</h4>
-                <div className="form-group">
-                  <label>Заголовок:</label>
-                  <input type="text" required value={bannerData.heroTop.title} onChange={(e) => setBannerData({...bannerData, heroTop: {...bannerData.heroTop, title: e.target.value}})} />
+              <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                {/* ВЕРХНІЙ БАНЕР */}
+                <div className="banner-section-block" style={{ flex: '1 1 45%' }}>
+                  <h4 className="banner-section-title">Верхній банер (Головний екран)</h4>
+                  
+                  {/* ОНОВЛЕНО: Відображається стандартне фото з Home, якщо немає свого */}
+                  <div style={{ height: '150px', backgroundColor: '#eaeaea', borderRadius: '8px', marginBottom: '15px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img 
+                      src={bannerData.heroTop.imageUrl || heroImg} 
+                      alt="Top Banner Preview" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Заголовок:</label>
+                    <input type="text" required value={bannerData.heroTop.title} onChange={(e) => setBannerData({...bannerData, heroTop: {...bannerData.heroTop, title: e.target.value}})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Підзаголовок:</label>
+                    <textarea rows="2" required value={bannerData.heroTop.subtitle} onChange={(e) => setBannerData({...bannerData, heroTop: {...bannerData.heroTop, subtitle: e.target.value}})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Зображення:</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {/* ДОДАНО КЛАС custom-file-input */}
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="custom-file-input"
+                        onChange={(e) => handleImageUpload(e, setBannerData, 'heroTop.imageUrl')} 
+                      />
+                      <input type="text" placeholder="Або вставте URL..." value={bannerData.heroTop.imageUrl} onChange={(e) => setBannerData({...bannerData, heroTop: {...bannerData.heroTop, imageUrl: e.target.value}})} />
+                    </div>
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>Підзаголовок:</label>
-                  <textarea rows="2" required value={bannerData.heroTop.subtitle} onChange={(e) => setBannerData({...bannerData, heroTop: {...bannerData.heroTop, subtitle: e.target.value}})} />
-                </div>
-                <div className="form-group">
-                  <label>URL Зображення (залиште пустим для стандартного):</label>
-                  <input type="text" placeholder="https://..." value={bannerData.heroTop.imageUrl} onChange={(e) => setBannerData({...bannerData, heroTop: {...bannerData.heroTop, imageUrl: e.target.value}})} />
+
+                {/* НИЖНІЙ БАНЕР */}
+                <div className="banner-section-block" style={{ flex: '1 1 45%' }}>
+                  <h4 className="banner-section-title">Нижній банер (Перед майстрами)</h4>
+                  
+                  {/* ОНОВЛЕНО: Відображається стандартне фото з Home, якщо немає свого */}
+                  <div style={{ height: '150px', backgroundColor: '#eaeaea', borderRadius: '8px', marginBottom: '15px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img 
+                      src={bannerData.heroBottom.imageUrl || heroDownImg} 
+                      alt="Bottom Banner Preview" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Заголовок:</label>
+                    <input type="text" required value={bannerData.heroBottom.title} onChange={(e) => setBannerData({...bannerData, heroBottom: {...bannerData.heroBottom, title: e.target.value}})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Підзаголовок:</label>
+                    <textarea rows="2" required value={bannerData.heroBottom.subtitle} onChange={(e) => setBannerData({...bannerData, heroBottom: {...bannerData.heroBottom, subtitle: e.target.value}})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Зображення:</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {/* ДОДАНО КЛАС custom-file-input */}
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="custom-file-input"
+                        onChange={(e) => handleImageUpload(e, setBannerData, 'heroBottom.imageUrl')} 
+                      />
+                      <input type="text" placeholder="Або вставте URL..." value={bannerData.heroBottom.imageUrl} onChange={(e) => setBannerData({...bannerData, heroBottom: {...bannerData.heroBottom, imageUrl: e.target.value}})} />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="banner-section-block">
-                <h4 className="banner-section-title">Нижній банер (Перед майстрами)</h4>
-                <div className="form-group">
-                  <label>Заголовок:</label>
-                  <input type="text" required value={bannerData.heroBottom.title} onChange={(e) => setBannerData({...bannerData, heroBottom: {...bannerData.heroBottom, title: e.target.value}})} />
-                </div>
-                <div className="form-group">
-                  <label>Підзаголовок:</label>
-                  <textarea rows="2" required value={bannerData.heroBottom.subtitle} onChange={(e) => setBannerData({...bannerData, heroBottom: {...bannerData.heroBottom, subtitle: e.target.value}})} />
-                </div>
-                <div className="form-group">
-                  <label>URL Зображення (залиште пустим для стандартного):</label>
-                  <input type="text" placeholder="https://..." value={bannerData.heroBottom.imageUrl} onChange={(e) => setBannerData({...bannerData, heroBottom: {...bannerData.heroBottom, imageUrl: e.target.value}})} />
-                </div>
+              <div style={{ textAlign: 'right', marginTop: '10px' }}>
+                <button type="submit" className="admin-submit-btn" style={{ padding: '15px 40px', fontSize: '18px' }}>Зберегти всі банери</button>
               </div>
-
-              <button type="submit" className="admin-submit-btn">Зберегти банери</button>
             </form>
           </div>
         )}

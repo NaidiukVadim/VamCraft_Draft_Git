@@ -657,3 +657,32 @@
     max-width: 100% !important;
   }
 }
+
+/* ========================================================
+   СТИЛІ ДЛЯ ЗАВАНТАЖЕННЯ ФАЙЛІВ
+   ======================================================== */
+.custom-file-input {
+  width: 100%;
+  color: #555;
+  cursor: pointer;
+}
+
+/* Стилізуємо саму кнопку "Вибрати файл" всередині інпуту */
+.custom-file-input::file-selector-button {
+  margin-right: 15px; /* Гарний відступ від тексту "Файл не вибрано" */
+  padding: 8px 16px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  color: #333;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.custom-file-input::file-selector-button:hover {
+  background-color: #f5f5f5;
+  border-color: #bbb;
+}
