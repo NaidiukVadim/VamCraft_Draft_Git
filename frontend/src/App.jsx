@@ -316,12 +316,12 @@ function App() {
       <footer>
         <div className="top-text-footer">
           <div className="footer-text-cont">
-            <div className="footer-container">
+            <Link to="/" className="footer-logo-link" onClick={() => window.scrollTo(0, 0)}>
               <svg className="logo-icon">
                 <use xlinkHref="#logo-icon"/>
               </svg>
               <h1>VamCraft</h1>
-            </div>
+            </Link>
             <p>Маркетплейс унікальних хендмейд товарів від талановитих українських майстрів.</p>
             <div className="footer-images">
               <a href="https://www.facebook.com/" className="social-link">

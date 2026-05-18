@@ -650,10 +650,17 @@ footer{
   padding-top: 50px;
 }
 
-.footer-container{
+.footer-logo-link {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.footer-logo-link:hover {
+  opacity: 0.9;
 }
 
 .list-row{
@@ -864,11 +871,6 @@ footer{
   background-repeat: no-repeat;
   background-position: right center;
   transition: color 0.2s ease;
-}
-
-.modern-select:focus, 
-.modern-select:hover {
-  color: #C87855;
 }
 
 .filter-divider {
@@ -1476,6 +1478,7 @@ footer{
   /* --- МОДАЛКА --- */
   .modal-content {
     padding: 24px 20px;
+    margin: 20px;
   }
 }
 
@@ -1673,7 +1676,7 @@ footer{
 
   /* --- ФІЛЬТРИ --- */
   .home-filters-wrapper {
-    padding: 0 16px;
+    padding: 0 20px;
     margin-top: 24px;
     margin-bottom: 30px;
   }
@@ -1713,8 +1716,8 @@ footer{
   }
 
   .main-head {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
   .main-head h2 {
@@ -1799,10 +1802,6 @@ footer{
     font-size: 14px;
   }
 
-  /* --- МОДАЛКА --- */
-  .modal-content {
-    padding: 24px 20px;
-  }
 }
 
 /* =========================================
@@ -1837,84 +1836,21 @@ footer{
    АНІМАЦІЯ ПОЯВИ ФІЛЬТРОВАНИХ ТОВАРІВ
 ========================================= */
 .animate-fade-in {
-  /* Запускаємо анімацію на 0.4 секунди, плавно (ease-out) */
   animation: filterFadeInUp 0.4s ease-out forwards;
-  opacity: 0; /* Початковий стан — невидимий */
+  opacity: 0;
 }
 
 @keyframes filterFadeInUp {
   0% {
     opacity: 0;
-    transform: translateY(20px); /* Трохи опущено вниз */
+    transform: translateY(20px);
   }
   100% {
     opacity: 1;
-    transform: translateY(0); /* Повертається на своє нормальне місце */
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 768px) {
-  /* Модалка займає весь екран знизу (bottom sheet) */
-  .modal-overlay {
-    align-items: flex-end;
-    padding: 0;
-  }
-
-  .modal-content {
-    width: 100%;
-    max-width: 100%;
-    border-radius: 20px 20px 0 0;
-    padding: 24px 20px 36px; /* більший нижній відступ для жесту */
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
-    /* Анімація знизу вгору */
-    animation: slideUpModal 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-
-  @keyframes slideUpModal {
-    from { transform: translateY(100%); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-
-  /* Індикатор свайпу зверху */
-  .modal-content::before {
-    content: '';
-    display: block;
-    width: 40px;
-    height: 4px;
-    background-color: #e0e0e0;
-    border-radius: 2px;
-    margin: 0 auto 20px;
-  }
-
-  .modal-content h2 {
-    font-size: 20px;
-  }
-
-  .modal-content p {
-    font-size: 14px;
-    margin-bottom: 16px;
-  }
-
-  .modal-close-btn {
-    top: 12px;
-    right: 14px;
-    font-size: 24px;
-  }
-
-  /* Інпути не зумують на iOS */
-  .form-group input,
-  .form-group textarea {
-    font-size: 16px !important;
-  }
-
-  .submit-btn {
-    padding: 14px;
-    font-size: 16px;
-    border-radius: 10px;
-  }
-}
 
 h1, h2{
   line-height: 1.3;

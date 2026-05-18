@@ -1,8 +1,5 @@
 /* src/pages/Admin.css */
 
-/* =========================================
-   ОСНОВНИЙ ЛЕЙАУТ
-========================================= */
 .admin-page {
   display: flex;
   min-height: 80vh;
@@ -11,16 +8,14 @@
   gap: 20px;
 }
 
-/* =========================================
-   САЙДБАР (БОКОВЕ МЕНЮ)
-========================================= */
+/* ── САЙДБАР ── */
 .admin-sidebar {
   width: 250px;
   flex-shrink: 0;
   background-color: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -59,16 +54,13 @@
   font-weight: bold;
 }
 
-/* =========================================
-   КОНТЕНТНА ЧАСТИНА
-========================================= */
+/* ── КОНТЕНТ ── */
 .admin-content {
   flex: 1;
   background-color: white;
   padding: 30px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  overflow-x: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   min-width: 0;
 }
 
@@ -87,9 +79,7 @@
   font-size: 24px;
 }
 
-/* =========================================
-   КНОПКИ ТА УТИЛІТИ
-========================================= */
+/* ── КНОПКИ ── */
 .add-new-btn {
   background-color: #d8705c;
   color: white;
@@ -128,9 +118,7 @@
   gap: 6px;
 }
 
-/* =========================================
-   ТАБЛИЦІ
-========================================= */
+/* ── ТАБЛИЦЯ (десктоп) ── */
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -174,9 +162,7 @@
   font-size: 0.9em;
 }
 
-/* =========================================
-   СТАТУСИ (ОБ'ЄДНАНІ)
-========================================= */
+/* ── СТАТУСИ ── */
 .status-badge {
   padding: 5px 10px;
   border-radius: 15px;
@@ -222,9 +208,7 @@
   border: 1px solid #ffcdd2;
 }
 
-/* =========================================
-   КНОПКИ ДІЙ В ТАБЛИЦІ
-========================================= */
+/* ── КНОПКИ В ТАБЛИЦІ ── */
 .actions-cell {
   display: flex;
   gap: 8px;
@@ -281,9 +265,7 @@
   color: #333;
 }
 
-/* =========================================
-   ДЕТАЛІ ЗАМОВЛЕННЯ ТА ВКЛАДКИ
-========================================= */
+/* ── ВКЛАДКИ ЗАМОВЛЕНЬ ── */
 .order-tabs-container {
   display: flex;
   gap: 8px;
@@ -306,6 +288,7 @@
   color: #555;
   white-space: nowrap;
   transition: background 0.2s, color 0.2s;
+  font-size: 14px;
 }
 
 .order-tab:hover {
@@ -319,13 +302,14 @@
   color: #d8705c;
 }
 
+/* ── ДЕТАЛІ ЗАМОВЛЕННЯ ── */
 .order-details-row td {
   padding: 0;
   background-color: #f9f9f9;
 }
 
 .order-details-container {
-  padding: 15px 20px 20px 20px;
+  padding: 15px 20px 20px;
   border-bottom: 1px solid #ddd;
 }
 
@@ -388,15 +372,7 @@
   font-style: italic;
 }
 
-/* =========================================
-   ФОРМИ ТА БАНЕРИ
-========================================= */
-.admin-form-container h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #333;
-}
-
+/* ── ФОРМИ ── */
 .admin-form {
   max-width: 600px;
 }
@@ -479,6 +455,7 @@
   background-color: #b05847;
 }
 
+/* ── БАНЕРИ ── */
 .banner-form {
   max-width: 800px;
 }
@@ -495,8 +472,34 @@
   color: #d8705c;
 }
 
+/* ── ФАЙЛ-ІНПУТ ── */
+.custom-file-input {
+  width: 100%;
+  color: #555;
+  cursor: pointer;
+}
+
+.custom-file-input::file-selector-button {
+  margin-right: 15px;
+  padding: 8px 16px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  color: #333;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.custom-file-input::file-selector-button:hover {
+  background-color: #f5f5f5;
+  border-color: #bbb;
+}
+
 /* =========================================
-   АДАПТИВНІСТЬ: ПЛАНШЕТ (до 1024px)
+   ТАБЛЕТ (до 1024px)
 ========================================= */
 @media (max-width: 1024px) {
   .admin-page {
@@ -531,25 +534,38 @@
 }
 
 /* =========================================
-   АДАПТИВНІСТЬ: МОБІЛЬНИЙ (до 768px)
+   МОБІЛЬНИЙ (до 768px)
+   Таблиця → картки, нуль горизонтального скролу
 ========================================= */
 @media (max-width: 768px) {
+
+  /* Лейаут */
   .admin-page {
     flex-direction: column;
-    padding: 12px;
-    gap: 12px;
+    padding: 0;
+    gap: 0;
   }
 
+  /* Сайдбар → горизонтальні таби зверху */
   .admin-sidebar {
     width: 100%;
+    box-sizing: border-box;
     flex-direction: row;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     padding: 10px 12px;
     gap: 6px;
-    border-radius: 10px;
+    border-radius: 0;
     align-items: center;
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .admin-sidebar::-webkit-scrollbar {
+    display: none;
   }
 
   .admin-sidebar h2 {
@@ -558,26 +574,35 @@
 
   .admin-sidebar button {
     white-space: nowrap;
-    padding: 9px 16px;
+    padding: 8px 16px;
     font-size: 14px;
     border-radius: 20px;
     flex-shrink: 0;
     text-align: center;
+    border: 1px solid #eee;
   }
 
+  .admin-sidebar button.active {
+    border-color: #d8705c;
+  }
+
+  /* Контент */
   .admin-content {
     padding: 16px 12px;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
   }
 
   .admin-section-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: stretch;
+    gap: 10px;
     margin-bottom: 16px;
   }
 
   .admin-section-header h3 {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .add-new-btn,
@@ -587,40 +612,113 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 11px 16px;
+    padding: 12px 16px;
+    box-sizing: border-box;
   }
 
-  .admin-table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    font-size: 13px;
-  }
-
-  .admin-table th,
-  .admin-table td {
-    padding: 10px 8px;
-    font-size: 13px;
-    white-space: nowrap;
-  }
-
-  .orders-table .col-date {
+  /* -----------------------------------------------
+     ТАБЛИЦЯ → КАРТКИ
+     thead ховається, кожен tr стає карткою,
+     td показується як рядок «мітка: значення»
+     ----------------------------------------------- */
+  .admin-table thead {
     display: none;
   }
 
+  .admin-table,
+  .admin-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  /* Кожен рядок = картка */
+  .admin-table tbody tr {
+    display: block;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Кожна комірка — рядок */
+  .admin-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 5px 0;
+    border-bottom: 1px solid #f5f5f5;
+    font-size: 14px;
+    white-space: normal;
+    word-break: break-word;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-table td:last-child {
+    border-bottom: none;
+    padding-top: 8px;
+  }
+
+  /* Мітка (data-label) зліва */
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #9ca3af;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    flex-shrink: 0;
+    min-width: 75px;
+    padding-top: 2px;
+  }
+
+  /* Кнопки дій — горизонтально */
   .actions-cell {
-    flex-direction: column;
-    gap: 4px;
-    align-items: stretch;
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   .status-select-inline {
-    width: 100%;
-    font-size: 12px;
+    width: auto;
+    min-width: 110px;
+    font-size: 13px;
+  }
+
+  /* Рядок деталей замовлення */
+  .admin-table tbody tr.expanded-row {
+    margin-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+  }
+
+  .orders-table .order-details-row {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .order-details-row td {
+    display: block !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .order-details-row td::before {
+    display: none;
   }
 
   .order-details-container {
-    padding: 12px;
+    margin: 0;
+    border-radius: 0 0 10px 10px;
+    border: 1px solid #eee;
+    border-top: none;
   }
 
   .order-item-detail {
@@ -634,7 +732,31 @@
     font-size: 12px;
   }
 
-  .admin-form {
+  /* Вкладки замовлень */
+  .order-tabs-container {
+    gap: 6px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: none;
+  }
+
+  .order-tab {
+    padding: 7px 12px;
+    font-size: 12px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+  }
+
+  .order-tab.active {
+    background-color: #d8705c;
+    color: #fff;
+    border-color: #d8705c;
+    border-bottom: 1px solid #d8705c;
+  }
+
+  /* Форми */
+  .admin-form,
+  .banner-form {
     max-width: 100%;
   }
 
@@ -650,39 +772,17 @@
   .admin-submit-btn {
     width: 100%;
     text-align: center;
+    padding: 14px;
   }
-  
-  .banner-form,
-  .admin-form[style] {
-    max-width: 100% !important;
+
+  /* Банери — вертикально */
+  .banner-form>div[style] {
+    flex-direction: column !important;
   }
-}
 
-/* ========================================================
-   СТИЛІ ДЛЯ ЗАВАНТАЖЕННЯ ФАЙЛІВ
-   ======================================================== */
-.custom-file-input {
-  width: 100%;
-  color: #555;
-  cursor: pointer;
-}
-
-/* Стилізуємо саму кнопку "Вибрати файл" всередині інпуту */
-.custom-file-input::file-selector-button {
-  margin-right: 15px; /* Гарний відступ від тексту "Файл не вибрано" */
-  padding: 8px 16px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  color: #333;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.custom-file-input::file-selector-button:hover {
-  background-color: #f5f5f5;
-  border-color: #bbb;
+  .banner-section-block {
+    flex: none !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
 }
