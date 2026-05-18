@@ -15,7 +15,7 @@
   background-color: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -44,15 +44,8 @@
   color: #000;
 }
 
-.admin-sidebar button:hover {
-  background-color: #f0e5de;
-}
-
-.admin-sidebar button.active {
-  background-color: #d8705c;
-  color: white;
-  font-weight: bold;
-}
+.admin-sidebar button:hover  { background-color: #f0e5de; }
+.admin-sidebar button.active { background-color: #d8705c; color: white; font-weight: bold; }
 
 /* ── КОНТЕНТ ── */
 .admin-content {
@@ -60,7 +53,7 @@
   background-color: white;
   padding: 30px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   min-width: 0;
 }
 
@@ -73,347 +66,144 @@
   gap: 10px;
 }
 
-.admin-section-header h3 {
-  margin: 0;
-  color: #333;
-  font-size: 24px;
-}
+.admin-section-header h3 { margin: 0; color: #333; font-size: 24px; }
 
 /* ── КНОПКИ ── */
 .add-new-btn {
-  background-color: #d8705c;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s;
-  white-space: nowrap;
+  background-color: #d8705c; color: white; border: none;
+  padding: 10px 18px; border-radius: 6px; cursor: pointer;
+  font-weight: bold; transition: background-color 0.2s; white-space: nowrap;
 }
-
-.add-new-btn:hover {
-  background-color: #b05847;
-}
+.add-new-btn:hover { background-color: #b05847; }
 
 .back-btn {
-  background-color: #eee;
-  color: #333;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s;
-  white-space: nowrap;
+  background-color: #eee; color: #333; border: none;
+  padding: 10px 18px; border-radius: 6px; cursor: pointer;
+  font-weight: bold; transition: background-color 0.2s; white-space: nowrap;
 }
+.back-btn:hover { background-color: #ddd; }
 
-.back-btn:hover {
-  background-color: #ddd;
-}
-
-.btn-with-icon {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.btn-with-icon { display: flex; align-items: center; gap: 6px; }
 
 /* ── ТАБЛИЦЯ (десктоп) ── */
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
+.admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 
 .admin-table th,
 .admin-table td {
-  text-align: left;
-  padding: 14px 12px;
-  font-size: 16px;
-  border-bottom: 1px solid #eee;
-  color: #333;
+  text-align: left; padding: 14px 12px;
+  font-size: 16px; border-bottom: 1px solid #eee; color: #333;
 }
 
 .admin-table th {
-  background-color: #fcfcfc;
-  color: #777;
-  font-weight: 600;
-  font-size: 14px;
-  text-transform: uppercase;
+  background-color: #fcfcfc; color: #777;
+  font-weight: 600; font-size: 14px; text-transform: uppercase;
 }
 
-.admin-table tbody tr:hover {
-  background-color: #fafafa;
-}
+.admin-table tbody tr:hover { background-color: #fafafa; }
 
-.orders-table .expanded-row td {
-  border-bottom: none;
-  background-color: #f9f9f9;
-}
+.orders-table .expanded-row td { border-bottom: none; background-color: #f9f9f9; }
 
-.price-cell {
-  font-weight: bold;
-  color: #2c3e50;
-  white-space: nowrap;
-}
-
-.text-muted {
-  color: #7f8c8d;
-  font-size: 0.9em;
-}
+.price-cell { font-weight: bold; color: #2c3e50; white-space: nowrap; }
+.text-muted  { color: #7f8c8d; font-size: 0.9em; }
 
 /* ── СТАТУСИ ── */
 .status-badge {
-  padding: 5px 10px;
-  border-radius: 15px;
-  font-size: 12px;
-  font-weight: 600;
-  display: inline-block;
-  white-space: nowrap;
+  padding: 5px 10px; border-radius: 15px;
+  font-size: 12px; font-weight: 600; display: inline-block; white-space: nowrap;
 }
 
-.status-badge.active {
-  background-color: #f6ffed;
-  color: #389e0d;
-  border: 1px solid #b7eb8f;
-}
-
-.status-new {
-  background-color: #e3f2fd;
-  color: #1565c0;
-  border: 1px solid #bbdefb;
-}
-
-.status-processing {
-  background-color: #fff3e0;
-  color: #ef6c00;
-  border: 1px solid #ffe0b2;
-}
-
-.status-sent {
-  background-color: #e6f7ff;
-  color: #096dd9;
-  border: 1px solid #91d5ff;
-}
-
-.status-completed {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #c8e6c9;
-}
-
-.status-cancelled {
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1px solid #ffcdd2;
-}
+.status-badge.active { background-color: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+.status-new          { background-color: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+.status-processing   { background-color: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+.status-sent         { background-color: #e6f7ff; color: #096dd9; border: 1px solid #91d5ff; }
+.status-completed    { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.status-cancelled    { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
 
 /* ── КНОПКИ В ТАБЛИЦІ ── */
-.actions-cell {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
+.actions-cell { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.btn-edit, .btn-disable, .btn-view {
+  padding: 6px 12px; border: none; border-radius: 4px;
+  cursor: pointer; font-size: 13px; font-weight: bold;
+  transition: 0.2s; white-space: nowrap;
 }
 
-.btn-edit,
-.btn-disable,
-.btn-view {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: bold;
-  transition: 0.2s;
-  white-space: nowrap;
-}
-
-.btn-edit {
-  background-color: #e6f7ff;
-  color: #0050b3;
-}
-
-.btn-edit:hover {
-  background-color: #bae0ff;
-}
-
-.btn-disable {
-  background-color: #fff1f0;
-  color: #cf1322;
-}
-
-.btn-disable:hover {
-  background-color: #ffa39e;
-}
-
-.btn-view {
-  background-color: #95a5a6;
-  color: white;
-}
-
-.btn-view:hover {
-  background-color: #7f8c8d;
-}
+.btn-edit          { background-color: #e6f7ff; color: #0050b3; }
+.btn-edit:hover    { background-color: #bae0ff; }
+.btn-disable       { background-color: #fff1f0; color: #cf1322; }
+.btn-disable:hover { background-color: #ffa39e; }
+.btn-view          { background-color: #95a5a6; color: white; }
+.btn-view:hover    { background-color: #7f8c8d; }
 
 .status-select-inline {
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 0.9em;
-  background-color: #f5f5f5;
-  color: #333;
+  padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc;
+  font-size: 0.9em; background-color: #f5f5f5; color: #333;
 }
 
 /* ── ВКЛАДКИ ЗАМОВЛЕНЬ ── */
 .order-tabs-container {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #eee;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  -webkit-overflow-scrolling: touch;
+  display: flex; gap: 8px; margin-bottom: 20px;
+  border-bottom: 2px solid #eee; overflow-x: auto;
+  padding-bottom: 2px; -webkit-overflow-scrolling: touch;
 }
 
 .order-tab {
-  padding: 10px 16px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  margin-bottom: -2px;
-  border-radius: 6px 6px 0 0;
-  cursor: pointer;
-  font-weight: normal;
-  color: #555;
-  white-space: nowrap;
-  transition: background 0.2s, color 0.2s;
-  font-size: 14px;
+  padding: 10px 16px; background: #f5f5f5;
+  border: 1px solid #ddd; border-bottom: 1px solid #ddd;
+  margin-bottom: -2px; border-radius: 6px 6px 0 0;
+  cursor: pointer; font-weight: normal; color: #555;
+  white-space: nowrap; transition: background 0.2s, color 0.2s; font-size: 14px;
 }
 
-.order-tab:hover {
-  background-color: #eaeaea;
-}
+.order-tab:hover { background-color: #eaeaea; }
 
 .order-tab.active {
-  background: #fff;
-  border-bottom: 2px solid #fff;
-  font-weight: bold;
-  color: #d8705c;
+  background: #fff; border-bottom: 2px solid #fff;
+  font-weight: bold; color: #d8705c;
 }
 
 /* ── ДЕТАЛІ ЗАМОВЛЕННЯ ── */
-.order-details-row td {
-  padding: 0;
-  background-color: #f9f9f9;
-}
-
-.order-details-container {
-  padding: 15px 20px 20px;
-  border-bottom: 1px solid #ddd;
-}
-
-.order-details-container h4 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  color: #333;
-}
-
-.order-details-container ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+.order-details-row td    { padding: 0; background-color: #f9f9f9; }
+.order-details-container { padding: 15px 20px 20px; border-bottom: 1px solid #ddd; }
+.order-details-container h4 { margin-top: 0; margin-bottom: 10px; color: #333; }
+.order-details-container ul { list-style: none; padding: 0; margin: 0; }
 
 .order-item-detail {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px dashed #eee;
-  gap: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px dashed #eee; gap: 10px;
 }
 
-.order-item-detail:last-child {
-  border-bottom: none;
-}
-
-.item-name {
-  flex: 1;
-}
-
-.item-meta {
-  color: #555;
-  white-space: nowrap;
-}
+.order-item-detail:last-child { border-bottom: none; }
+.item-name { flex: 1; }
+.item-meta { color: #555; white-space: nowrap; }
 
 .order-comment {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #fff;
-  border-left: 3px solid #ddd;
-  font-style: italic;
-  color: #555;
+  margin-top: 15px; padding: 10px; background-color: #fff;
+  border-left: 3px solid #ddd; font-style: italic; color: #555;
 }
 
 .delivery-info-box {
-  margin-bottom: 20px;
-  padding: 12px;
-  font-size: 14px;
-  background-color: #f0f4f8;
-  border-radius: 6px;
-  border-left: 4px solid #d8705c;
+  margin-bottom: 20px; padding: 12px; font-size: 14px;
+  background-color: #f0f4f8; border-radius: 6px; border-left: 4px solid #d8705c;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  color: #7f8c8d;
-  font-style: italic;
-}
+.empty-state { text-align: center; padding: 40px; color: #7f8c8d; font-style: italic; }
 
 /* ── ФОРМИ ── */
-.admin-form {
-  max-width: 600px;
-}
+.admin-form { max-width: 600px; }
 
-.form-group {
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.form-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+.form-group label { font-weight: bold; color: #555; font-size: 14px; }
+.form-group select { background-color: #f5f5f5; color: #333; }
 
-.form-group label {
-  font-weight: bold;
-  color: #555;
-  font-size: 14px;
-}
-
-.form-group select {
-  background-color: #f5f5f5;
-  color: #333;
-}
-
-.form-group.checkbox-group {
-  flex-direction: row;
-  align-items: center;
-}
+.form-group.checkbox-group { flex-direction: row; align-items: center; }
 
 .form-group.checkbox-group label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-weight: normal;
-  font-size: 16px;
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; font-weight: normal; font-size: 16px;
 }
 
-.form-group.checkbox-group input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
+.form-group.checkbox-group input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
 
 .form-group input[type="text"],
 .form-group input[type="number"],
@@ -421,116 +211,56 @@
 .form-group input[type="url"],
 .form-group select,
 .form-group textarea {
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 16px;
-  font-family: inherit;
-  transition: border-color 0.2s;
-  background-color: #f5f5f5;
-  color: #333;
+  padding: 12px; border: 1px solid #ccc; border-radius: 6px;
+  font-size: 16px; font-family: inherit; transition: border-color 0.2s;
+  background-color: #f5f5f5; color: #333;
 }
 
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus {
-  border-color: #d8705c;
-  outline: none;
-}
+.form-group textarea:focus { border-color: #d8705c; outline: none; }
 
 .admin-submit-btn {
-  background-color: #d8705c;
-  color: white;
-  padding: 14px 28px;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-  margin-top: 10px;
+  background-color: #d8705c; color: white;
+  padding: 14px 28px; border: none; border-radius: 6px;
+  font-size: 16px; font-weight: bold; cursor: pointer;
+  transition: 0.3s; margin-top: 10px;
 }
 
-.admin-submit-btn:hover {
-  background-color: #b05847;
-}
+.admin-submit-btn:hover { background-color: #b05847; }
 
 /* ── БАНЕРИ ── */
-.banner-form {
-  max-width: 800px;
-}
+.banner-form { max-width: 800px; }
 
 .banner-section-block {
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  padding: 20px; background-color: #f9f9f9;
+  border-radius: 8px; margin-bottom: 20px;
 }
 
-.banner-section-title {
-  margin-top: 0;
-  color: #d8705c;
-}
+.banner-section-title { margin-top: 0; color: #d8705c; }
 
 /* ── ФАЙЛ-ІНПУТ ── */
-.custom-file-input {
-  width: 100%;
-  color: #555;
-  cursor: pointer;
-}
+.custom-file-input { width: 100%; color: #555; cursor: pointer; }
 
 .custom-file-input::file-selector-button {
-  margin-right: 15px;
-  padding: 8px 16px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  color: #333;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  margin-right: 15px; padding: 8px 16px;
+  background-color: #fff; border: 1px solid #ccc;
+  border-radius: 6px; color: #333; cursor: pointer;
+  font-family: inherit; font-size: 14px; font-weight: 500; transition: all 0.2s ease;
 }
 
-.custom-file-input::file-selector-button:hover {
-  background-color: #f5f5f5;
-  border-color: #bbb;
-}
+.custom-file-input::file-selector-button:hover { background-color: #f5f5f5; border-color: #bbb; }
 
 /* =========================================
    ТАБЛЕТ (до 1024px)
 ========================================= */
 @media (max-width: 1024px) {
-  .admin-page {
-    padding: 16px;
-    gap: 16px;
-  }
-
-  .admin-sidebar {
-    width: 200px;
-    padding: 16px;
-    position: static;
-  }
-
-  .admin-sidebar button {
-    font-size: 14px;
-    padding: 10px;
-  }
-
-  .admin-content {
-    padding: 20px;
-  }
-
-  .admin-section-header h3 {
-    font-size: 20px;
-  }
-
-  .admin-table th,
-  .admin-table td {
-    padding: 10px 8px;
-    font-size: 14px;
-  }
+  .admin-page    { padding: 16px; gap: 16px; }
+  .admin-sidebar { width: 200px; padding: 16px; position: static; }
+  .admin-sidebar button { font-size: 14px; padding: 10px; }
+  .admin-content { padding: 20px; }
+  .admin-section-header h3 { font-size: 20px; }
+  .admin-table th, .admin-table td { padding: 10px 8px; font-size: 14px; }
 }
 
 /* =========================================
@@ -554,23 +284,18 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 10px 12px;
+    padding: 15px 20px;
     gap: 6px;
     border-radius: 0;
     align-items: center;
     position: sticky;
     top: 0;
     z-index: 50;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
 
-  .admin-sidebar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .admin-sidebar h2 {
-    display: none;
-  }
+  .admin-sidebar::-webkit-scrollbar { display: none; }
+  .admin-sidebar h2 { display: none; }
 
   .admin-sidebar button {
     white-space: nowrap;
@@ -582,13 +307,11 @@
     border: 1px solid #eee;
   }
 
-  .admin-sidebar button.active {
-    border-color: #d8705c;
-  }
+  .admin-sidebar button.active { border-color: #d8705c; }
 
   /* Контент */
   .admin-content {
-    padding: 16px 12px;
+    padding: 20px;
     border-radius: 0;
     box-shadow: none;
     overflow: visible;
@@ -601,9 +324,7 @@
     margin-bottom: 16px;
   }
 
-  .admin-section-header h3 {
-    font-size: 17px;
-  }
+  .admin-section-header h3 { font-size: 17px; }
 
   .add-new-btn,
   .back-btn {
@@ -621,15 +342,10 @@
      thead ховається, кожен tr стає карткою,
      td показується як рядок «мітка: значення»
      ----------------------------------------------- */
-  .admin-table thead {
-    display: none;
-  }
+  .admin-table thead { display: none; }
 
   .admin-table,
-  .admin-table tbody {
-    display: block;
-    width: 100%;
-  }
+  .admin-table tbody { display: block; width: 100%; }
 
   /* Кожен рядок = картка */
   .admin-table tbody tr {
@@ -639,7 +355,7 @@
     border-radius: 10px;
     margin-bottom: 10px;
     padding: 12px 14px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     width: 100%;
     box-sizing: border-box;
   }
@@ -659,10 +375,7 @@
     box-sizing: border-box;
   }
 
-  .admin-table td:last-child {
-    border-bottom: none;
-    padding-top: 8px;
-  }
+  .admin-table td:last-child { border-bottom: none; padding-top: 8px; }
 
   /* Мітка (data-label) зліва */
   .admin-table td::before {
@@ -685,11 +398,7 @@
     gap: 6px;
   }
 
-  .status-select-inline {
-    width: auto;
-    min-width: 110px;
-    font-size: 13px;
-  }
+  .status-select-inline { width: auto; min-width: 110px; font-size: 13px; }
 
   /* Рядок деталей замовлення */
   .admin-table tbody tr.expanded-row {
@@ -710,9 +419,7 @@
     border: none !important;
   }
 
-  .order-details-row td::before {
-    display: none;
-  }
+  .order-details-row td::before { display: none; }
 
   .order-details-container {
     margin: 0;
@@ -721,16 +428,8 @@
     border-top: none;
   }
 
-  .order-item-detail {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-  }
-
-  .item-meta {
-    white-space: normal;
-    font-size: 12px;
-  }
+  .order-item-detail { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .item-meta         { white-space: normal; font-size: 12px; }
 
   /* Вкладки замовлень */
   .order-tabs-container {
@@ -756,29 +455,19 @@
 
   /* Форми */
   .admin-form,
-  .banner-form {
-    max-width: 100%;
-  }
+  .banner-form { max-width: 100%; }
 
   .form-group input[type="text"],
   .form-group input[type="number"],
   .form-group input[type="tel"],
   .form-group input[type="url"],
   .form-group select,
-  .form-group textarea {
-    font-size: 16px;
-  }
+  .form-group textarea { font-size: 16px; }
 
-  .admin-submit-btn {
-    width: 100%;
-    text-align: center;
-    padding: 14px;
-  }
+  .admin-submit-btn { width: 100%; text-align: center; padding: 14px; }
 
   /* Банери — вертикально */
-  .banner-form>div[style] {
-    flex-direction: column !important;
-  }
+  .banner-form > div[style] { flex-direction: column !important; }
 
   .banner-section-block {
     flex: none !important;

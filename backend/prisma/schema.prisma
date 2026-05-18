@@ -1,0 +1,145 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// =========================================
+// 1. РОЛІ ТА КОРИСТУВАЧІ
+// =========================================
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   // Зашифрований пароль для JWT-авторизації
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// =========================================
+// 2. СУТНОСТІ МАРКЕТПЛЕЙСУ
+// =========================================
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    // Назва категорії (напр., "Еко Косметика")
+  slug      String    @unique // Люддиночитабельний URL (напр., "eko-kosmetyka")
+  products  Product[]
+  createdAt DateTime  @default(now())
+
+  @@map("categories")
+}
+
+model Seller {
+  id          Int         @id @default(autoincrement())
+  name        String      // Назва магазину
+  slug        String      @unique // Для SEO: /shops/nazva-magazynu
+  description String?     @db.Text
+  logoUrl     String?     // Шлях до фото на сервері
+  phone       String
+  telegram    String      // Посилання на Telegram-чат
+  isActive    Boolean     @default(true) // Вимкнення продавця приховує його товари
+  products    Product[]
+  orderItems  OrderItem[] // Для перегляду замовлень по продавцях
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("sellers")
+}
+
+model Product {
+  id          Int         @id @default(autoincrement())
+  name        String
+  slug        String      @unique // Для SEO: /products/nazva-tovaru
+  description String      @db.Text
+  price       Decimal     @db.Decimal(10, 2) // Точна ціна без округлень флотів
+  imageUrl    String      // Шлях до фото (з автоматичним стисненням на сервері)
+  inStock     Boolean     @default(true) // Статус наявності
+  isActive    Boolean     @default(true) // Вимкнення товару адміністратором
+  
+  // Керування виводом на головну (Пункт 4 ТЗ)
+  showOnHome  Boolean     @default(false) // Ручне додавання адміном
+  isPromoted  Boolean     @default(false) // Позначка "акційний/рекомендований"
+  
+  // Метрики для сортування (Пункт 5 ТЗ)
+  salesCount  Int         @default(0)     // Популярність визначається за кількістю покупок
+  createdAt   DateTime    @default(now()) // Для сортування "нові"
+  updatedAt   DateTime    @updatedAt
+
+  // Зв'язки
+  sellerId    Int
+  seller      Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  categoryId  Int
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+// =========================================
+// 3. ЛОГІКА ЗАМОВЛЕНЬ (Пункт 10 ТЗ)
+// =========================================
+
+enum OrderStatus {
+  NEW          // Нове
+  PROCESSING   // В обробці
+  COMPLETED    // Виконане
+  CANCELLED    // Скасоване
+}
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  customerName  String      // Ім’я покупця
+  customerPhone String      // Телефон
+  city          String      // Місто
+  postBranch    String      // Відділення пошти
+  comment       String?     @db.Text
+  totalPrice    Decimal     @db.Decimal(10, 2) // Загальна сума всього кошика
+  status        OrderStatus @default(NEW)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  orderItems    OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id              Int      @id @default(autoincrement())
+  quantity        Int      // Кількість одиниць товару в замовленні
+  priceAtPurchase Decimal  @db.Decimal(10, 2) // Фіксація ціни на момент покупки
+
+  // Зв'язок із загальним замовленням
+  orderId         Int
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // Зв'язок із товаром
+  productId       Int
+  product         Product  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  
+  // Дублювання зв'язку з продавцем для логіки розділення замовлень
+  sellerId        Int
+  seller          Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+// =========================================
+// 4. МАРКЕТИНГОВІ ЕЛЕМЕНТИ
+// =========================================
+
+model Banner {
+  id        Int      @id @default(autoincrement())
+  imageUrl  String   // Фото банера на сервері
+  link      String   // Посилання на товар, магазин або категорію
+  sortOrder Int      @default(0) // Порядок показу (сортування за зростанням)
+  createdAt DateTime @default(now())
+
+  @@map("banners")
+}

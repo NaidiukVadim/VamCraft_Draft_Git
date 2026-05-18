@@ -452,13 +452,14 @@ body {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
+  padding: 0 100px;
   height: 700px;
   margin-bottom: 50px; 
   background: linear-gradient(135deg, #E8EDE8, #F5F0E8);
 }
 
 .hero-section .top{
-  height: 300px;
+  height: 350px;
 }
 
 .hero-section h1{
@@ -547,7 +548,7 @@ main h2{
 }
 
 .recommended-section{
-  margin-top: 40px;
+  margin-top: 90px;
   background-color: #F4E8D8;
   width: 100%;
   height: auto;
@@ -908,6 +909,8 @@ footer{
   display: flex;
   justify-content: space-evenly;
   align-items: center;
+  padding: 0 100px;
+  gap: 40px;
   height: 600px;
   background: linear-gradient(135deg, #Fdfbf7 0%, #F1E4D3 100%);
 }
@@ -1095,32 +1098,14 @@ footer{
     padding-right: 30px;
   }
 
-  .main-head {
-    padding-left: 30px;
-    padding-right: 30px;
-  }
-
-  .recommended-section h2 {
-    padding-left: 30px;
-  }
-
   .choosen-cards-admin {
     padding-left: 30px;
-  }
-
-  .home-filters-wrapper {
-    padding: 0 30px;
-    margin-top: 20px;
   }
 
   .home-filters-bar {
     flex-wrap: wrap;
     border-radius: 24px;
     gap: 12px;
-  }
-
-  .home-masters-section {
-    padding: 40px 30px;
   }
 
   .home-masters-grid {
@@ -1131,20 +1116,8 @@ footer{
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .hero-section {
-    height: auto;
-    padding: 60px 30px;
-    gap: 30px;
-  }
-
   .hero-section h1 {
     font-size: 36px;
-  }
-
-  .hero-section-btm {
-    height: auto;
-    padding: 60px 30px;
-    gap: 30px;
   }
 
   .hero-section-btm h1 {
@@ -1163,7 +1136,7 @@ footer{
 
     /* --- ХЕДЕР --- */
   .header {
-    padding: 0 16px;
+    padding: 0 20px;
     justify-content: space-between;
     height: 64px;
   }
@@ -1349,8 +1322,8 @@ footer{
 
   /* --- ФІЛЬТРИ --- */
   .home-filters-wrapper {
-    padding: 0 16px;
-    margin-top: 24px;
+    padding: 0 40px;
+    margin-top: 30px;
     margin-bottom: 30px;
   }
 
@@ -1389,8 +1362,8 @@ footer{
   }
 
   .main-head {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 40px;
+    padding-right: 40px;
   }
 
   .main-head h2 {
@@ -1399,13 +1372,13 @@ footer{
 
   /* --- РЕКОМЕНДОВАНІ --- */
   .recommended-section h2 {
-    padding-left: 16px;
-    padding-top: 30px;
+    padding-left: 40px;
+    padding-top: 50px;
     font-size: 22px;
   }
 
   .choosen-cards-admin {
-    padding-left: 16px;
+    padding-left: 40px;
   }
 
   .rec-sec {
@@ -1448,7 +1421,7 @@ footer{
 
   /* --- МАЙСТРИ --- */
   .home-masters-section {
-    padding: 40px 16px;
+    padding: 40px;
   }
 
   .masters-header-center h2 {
@@ -1463,7 +1436,7 @@ footer{
   /* --- ФУТЕР --- */
   .top-text-footer {
     flex-direction: column;
-    padding: 30px 20px 10px;
+    padding: 30px 40px 10px;
     gap: 24px;
   }
 
@@ -1490,7 +1463,7 @@ footer{
 
   /* --- ХЕДЕР --- */
   .header {
-    padding: 0 16px;
+    padding: 0 20px;
     justify-content: space-between;
     height: 64px;
   }
@@ -1677,8 +1650,8 @@ footer{
   /* --- ФІЛЬТРИ --- */
   .home-filters-wrapper {
     padding: 0 20px;
-    margin-top: 24px;
-    margin-bottom: 30px;
+    margin-top: 30px;
+    margin-bottom: 40px;
   }
 
   .home-filters-bar {
@@ -1722,17 +1695,18 @@ footer{
 
   .main-head h2 {
     font-size: 22px;
+    margin: 0;
   }
 
   /* --- РЕКОМЕНДОВАНІ --- */
   .recommended-section h2 {
-    padding-left: 16px;
-    padding-top: 30px;
+    padding-left: 20px;
+    padding-top: 40px;
     font-size: 22px;
   }
 
   .choosen-cards-admin {
-    padding-left: 16px;
+    padding-left: 20px;
   }
 
   .rec-sec {
@@ -1775,7 +1749,7 @@ footer{
 
   /* --- МАЙСТРИ --- */
   .home-masters-section {
-    padding: 40px 16px;
+    padding: 40px 20px;
   }
 
   .masters-header-center h2 {

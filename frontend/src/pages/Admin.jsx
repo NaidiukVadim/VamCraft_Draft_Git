@@ -6,13 +6,16 @@ import "./Admin.css";
 import heroImg from "../assets/hero-img.svg?url";
 import heroDownImg from "../assets/hero-down-img.png";
 
+// Константа для звернень до бекенду
+const BACKEND_URL = "http://localhost:5000";
+
 function Admin() {
   const {
     products,
     sellers,
     orders,
     banners,
-    addProduct,
+    addProduct, 
     updateProduct,
     deleteProduct,
     addSeller,
@@ -33,18 +36,21 @@ function Admin() {
   const initialProductState = {
     name: "",
     price: "",
-    category: "Кераміка",
+    categoryId: "1", 
     sellerId: "",
     description: "",
     isRecommended: false,
-    imageUrl: "",
+    imageUrl: "", 
+    imageFile: null, 
   };
+  
   const initialSellerState = {
     name: "",
     description: "",
     phone: "",
     telegram: "",
     logoUrl: "",
+    logoFile: null,
   };
 
   const [productData, setProductData] = useState(initialProductState);
@@ -90,6 +96,82 @@ function Admin() {
       ? orders
       : orders.filter((o) => o.status === orderFilter);
 
+  // ===============================================
+  // ЛОГІКА ДЛЯ ЗАВАНТАЖЕННЯ КАРТИНОК (ТОВАРИ)
+  // ===============================================
+  const handleProductImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const previewUrl = URL.createObjectURL(file);
+
+    setProductData((prev) => ({
+      ...prev,
+      imageUrl: previewUrl, 
+      imageFile: file,      
+    }));
+  };
+
+  /* ── Товари ── */
+  const handleEditProduct = (p) => {
+    setProductData({
+      ...p,
+      imageFile: null 
+    });
+    setEditingProductId(p.id);
+    setProductView("create");
+  };
+
+  const handleProductSubmit = async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append("name", productData.name);
+    formData.append("price", productData.price);
+    formData.append("description", productData.description);
+    formData.append("categoryId", productData.categoryId); 
+    formData.append("sellerId", productData.sellerId);
+    
+    if (productData.imageFile) {
+      formData.append("image", productData.imageFile);
+    } else if (productData.imageUrl && !productData.imageUrl.startsWith('blob:')) {
+       formData.append("imageUrl", productData.imageUrl);
+    }
+
+    try {
+      if (editingProductId) {
+         updateProduct(editingProductId, productData);
+         alert("Товар успішно оновлено!");
+      } else {
+        const response = await fetch(`${BACKEND_URL}/api/products`, {
+          method: 'POST',
+          body: formData 
+        });
+
+        if (response.ok) {
+           const savedProduct = await response.json();
+           addProduct(savedProduct); 
+           alert("Товар успішно додано на сервер!");
+        } else {
+           alert("Помилка при збереженні на сервер.");
+        }
+      }
+
+      setProductData(initialProductState);
+      setEditingProductId(null);
+      setProductView("list");
+      
+    } catch (error) {
+      console.error("Помилка відправки:", error);
+      alert("Не вдалося з'єднатися з сервером");
+    }
+  };
+
+  const handleDeleteProduct = (id) => {
+    if (window.confirm("Видалити товар?")) deleteProduct(id);
+  };
+
+  /* ── Продавці та Банери (Локальна логіка) ── */
   const handleImageUpload = (e, setter, key) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -106,38 +188,6 @@ function Admin() {
     reader.readAsDataURL(file);
   };
 
-  /* ── Товари ── */
-  const handleEditProduct = (p) => {
-    setProductData(p);
-    setEditingProductId(p.id);
-    setProductView("create");
-  };
-
-  const handleProductSubmit = (e) => {
-    e.preventDefault();
-    const seller = sellers.find((s) => s.id === productData.sellerId);
-    const toSave = {
-      ...productData,
-      owner: seller ? seller.name : "Невідомий майстер",
-      price: Number(productData.price),
-    };
-    if (editingProductId) {
-      updateProduct(editingProductId, toSave);
-      alert("Товар успішно оновлено!");
-    } else {
-      addProduct(toSave);
-      alert("Товар успішно додано!");
-    }
-    setProductData(initialProductState);
-    setEditingProductId(null);
-    setProductView("list");
-  };
-
-  const handleDeleteProduct = (id) => {
-    if (window.confirm("Видалити товар?")) deleteProduct(id);
-  };
-
-  /* ── Продавці ── */
   const handleEditSeller = (s) => {
     setSellerData(s);
     setEditingSellerId(s.id);
@@ -185,16 +235,7 @@ function Admin() {
   /* ── Хелпер кнопок ── */
   const BackBtn = ({ onClick }) => (
     <button className="back-btn btn-with-icon" onClick={onClick}>
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <line x1="19" y1="12" x2="5" y2="12" />
         <polyline points="12 19 5 12 12 5" />
       </svg>
@@ -204,16 +245,7 @@ function Admin() {
 
   const AddBtn = ({ onClick, label }) => (
     <button className="add-new-btn btn-with-icon" onClick={onClick}>
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <line x1="12" y1="5" x2="12" y2="19" />
         <line x1="5" y1="12" x2="19" y2="12" />
       </svg>
@@ -283,7 +315,7 @@ function Admin() {
                     <tr key={p.id}>
                       <td data-label="Назва">{p.name}</td>
                       <td data-label="Майстерня">
-                        <strong>{p.owner}</strong>
+                        <strong>{p.seller?.name || "Невідомо"}</strong>
                       </td>
                       <td data-label="Ціна">{p.price} ₴</td>
                       <td data-label="На гол.">
@@ -338,25 +370,15 @@ function Admin() {
                 <div className="form-group">
                   <label>Категорія:</label>
                   <select
-                    value={productData.category}
+                    value={productData.categoryId}
                     onChange={(e) =>
                       setProductData({
                         ...productData,
-                        category: e.target.value,
+                        categoryId: e.target.value,
                       })
                     }
                   >
-                    {[
-                      "Кераміка",
-                      "Дерево",
-                      "Шкіра",
-                      "Текстиль",
-                      "Прикраси",
-                    ].map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
+                    <option value="1">Еко Декор</option> 
                   </select>
                 </div>
                 <div className="form-group">
@@ -412,29 +434,22 @@ function Admin() {
                 </div>
                 <div className="form-group">
                   <label>Фотографія товару:</label>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "8px",
-                    }}
-                  >
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <input
                       type="file"
                       accept="image/*"
                       className="custom-file-input"
-                      onChange={(e) =>
-                        handleImageUpload(e, setProductData, "imageUrl")
-                      }
+                      onChange={handleProductImageUpload}
                     />
                     <input
                       type="text"
                       placeholder="Або вставте URL..."
-                      value={productData.imageUrl}
+                      value={productData.imageUrl || ""}
                       onChange={(e) =>
                         setProductData({
                           ...productData,
                           imageUrl: e.target.value,
+                          imageFile: null 
                         })
                       }
                     />
@@ -492,9 +507,7 @@ function Admin() {
                 </thead>
                 <tbody>
                   {sellers.map((s) => {
-                    const cnt = products.filter(
-                      (p) => p.sellerId === s.id,
-                    ).length;
+                    const cnt = products.filter((p) => p.sellerId === s.id).length;
                     return (
                       <tr key={s.id}>
                         <td data-label="Майстерня">
@@ -570,20 +583,12 @@ function Admin() {
                 </div>
                 <div className="form-group">
                   <label>Логотип магазину:</label>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "8px",
-                    }}
-                  >
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <input
                       type="file"
                       accept="image/*"
                       className="custom-file-input"
-                      onChange={(e) =>
-                        handleImageUpload(e, setSellerData, "logoUrl")
-                      }
+                      onChange={(e) => handleImageUpload(e, setSellerData, "logoUrl")}
                     />
                     <input
                       type="text"
@@ -626,7 +631,6 @@ function Admin() {
               <h3>Історія замовлень</h3>
             </div>
 
-            {/* Фільтр-таби */}
             <div className="order-tabs-container">
               {[
                 { id: "all", label: `Всі (${orders.length})` },
@@ -658,9 +662,7 @@ function Admin() {
             </div>
 
             {filteredOrders.length === 0 ? (
-              <p className="empty-state">
-                У цій категорії замовлень поки що немає.
-              </p>
+              <p className="empty-state">У цій категорії замовлень поки що немає.</p>
             ) : (
               <table className="admin-table orders-table">
                 <thead>
@@ -675,8 +677,7 @@ function Admin() {
                 </thead>
                 <tbody>
                   {filteredOrders.map((order) => {
-                    const statusInfo =
-                      orderStatuses[order.status] || orderStatuses.new;
+                    const statusInfo = orderStatuses[order.status] || orderStatuses.new;
                     const isExpanded = selectedOrderId === order.id;
                     return (
                       <React.Fragment key={order.id}>
@@ -686,17 +687,13 @@ function Admin() {
                           <td data-label="Клієнт">
                             <strong>{order.customerName}</strong>
                             <br />
-                            <span className="text-muted">
-                              {order.customerPhone}
-                            </span>
+                            <span className="text-muted">{order.customerPhone}</span>
                           </td>
                           <td data-label="Сума" className="price-cell">
                             {order.totalAmount} ₴
                           </td>
                           <td data-label="Статус">
-                            <span
-                              className={`status-badge ${statusInfo.class}`}
-                            >
+                            <span className={`status-badge ${statusInfo.class}`}>
                               {statusInfo.label}
                             </span>
                           </td>
@@ -709,9 +706,7 @@ function Admin() {
                             </button>
                             <select
                               value={order.status}
-                              onChange={(e) =>
-                                updateOrderStatus(order.id, e.target.value)
-                              }
+                              onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                               className="status-select-inline"
                             >
                               {Object.entries(orderStatuses).map(([k, v]) => (
@@ -728,24 +723,16 @@ function Admin() {
                             <td colSpan="6">
                               <div className="order-details-container">
                                 <div className="delivery-info-box">
-                                  <strong>Адреса доставки:</strong> м.{" "}
-                                  {order.city}, {order.postBranch}
+                                  <strong>Адреса доставки:</strong> м. {order.city}, {order.postBranch}
                                 </div>
                                 <h4>Склад замовлення:</h4>
                                 <ul>
                                   {order.items.map((item) => (
-                                    <li
-                                      key={item.id}
-                                      className="order-item-detail"
-                                    >
-                                      <span className="item-name">
-                                        {item.name}
-                                      </span>
+                                    <li key={item.id} className="order-item-detail">
+                                      <span className="item-name">{item.name}</span>
                                       <span className="item-meta">
                                         {item.quantity} шт. × {item.price} ₴ ={" "}
-                                        <strong>
-                                          {item.quantity * item.price} ₴
-                                        </strong>
+                                        <strong>{item.quantity * item.price} ₴</strong>
                                       </span>
                                     </li>
                                   ))}
@@ -775,40 +762,16 @@ function Admin() {
               <h3>Керування банерами</h3>
             </div>
 
-            <form
-              onSubmit={handleBannerSubmit}
-              className="admin-form banner-form"
-              style={{ maxWidth: "100%" }}
-            >
+            <form onSubmit={handleBannerSubmit} className="admin-form banner-form" style={{ maxWidth: "100%" }}>
               <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
                 {/* Верхній банер */}
-                <div
-                  className="banner-section-block"
-                  style={{ flex: "1 1 45%" }}
-                >
-                  <h4 className="banner-section-title">
-                    Верхній банер (Головний екран)
-                  </h4>
-                  <div
-                    style={{
-                      height: 150,
-                      backgroundColor: "#eaeaea",
-                      borderRadius: 8,
-                      marginBottom: 15,
-                      overflow: "hidden",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
+                <div className="banner-section-block" style={{ flex: "1 1 45%" }}>
+                  <h4 className="banner-section-title">Верхній банер (Головний екран)</h4>
+                  <div style={{ height: 150, backgroundColor: "#eaeaea", borderRadius: 8, marginBottom: 15, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img
                       src={bannerData.heroTop.imageUrl || heroImg}
                       alt="preview"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   </div>
                   <div className="form-group">
@@ -817,15 +780,7 @@ function Admin() {
                       type="text"
                       required
                       value={bannerData.heroTop.title}
-                      onChange={(e) =>
-                        setBannerData({
-                          ...bannerData,
-                          heroTop: {
-                            ...bannerData.heroTop,
-                            title: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => setBannerData({ ...bannerData, heroTop: { ...bannerData.heroTop, title: e.target.value } })}
                     />
                   </div>
                   <div className="form-group">
@@ -834,84 +789,36 @@ function Admin() {
                       rows="2"
                       required
                       value={bannerData.heroTop.subtitle}
-                      onChange={(e) =>
-                        setBannerData({
-                          ...bannerData,
-                          heroTop: {
-                            ...bannerData.heroTop,
-                            subtitle: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => setBannerData({ ...bannerData, heroTop: { ...bannerData.heroTop, subtitle: e.target.value } })}
                     />
                   </div>
                   <div className="form-group">
                     <label>Зображення:</label>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 8,
-                      }}
-                    >
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <input
                         type="file"
                         accept="image/*"
                         className="custom-file-input"
-                        onChange={(e) =>
-                          handleImageUpload(
-                            e,
-                            setBannerData,
-                            "heroTop.imageUrl",
-                          )
-                        }
+                        onChange={(e) => handleImageUpload(e, setBannerData, "heroTop.imageUrl")}
                       />
                       <input
                         type="text"
                         placeholder="Або вставте URL..."
                         value={bannerData.heroTop.imageUrl}
-                        onChange={(e) =>
-                          setBannerData({
-                            ...bannerData,
-                            heroTop: {
-                              ...bannerData.heroTop,
-                              imageUrl: e.target.value,
-                            },
-                          })
-                        }
+                        onChange={(e) => setBannerData({ ...bannerData, heroTop: { ...bannerData.heroTop, imageUrl: e.target.value } })}
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Нижній банер */}
-                <div
-                  className="banner-section-block"
-                  style={{ flex: "1 1 45%" }}
-                >
-                  <h4 className="banner-section-title">
-                    Нижній банер (Перед майстрами)
-                  </h4>
-                  <div
-                    style={{
-                      height: 150,
-                      backgroundColor: "#eaeaea",
-                      borderRadius: 8,
-                      marginBottom: 15,
-                      overflow: "hidden",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
+                <div className="banner-section-block" style={{ flex: "1 1 45%" }}>
+                  <h4 className="banner-section-title">Нижній банер (Перед майстрами)</h4>
+                  <div style={{ height: 150, backgroundColor: "#eaeaea", borderRadius: 8, marginBottom: 15, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img
                       src={bannerData.heroBottom.imageUrl || heroDownImg}
                       alt="preview"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   </div>
                   <div className="form-group">
@@ -920,15 +827,7 @@ function Admin() {
                       type="text"
                       required
                       value={bannerData.heroBottom.title}
-                      onChange={(e) =>
-                        setBannerData({
-                          ...bannerData,
-                          heroBottom: {
-                            ...bannerData.heroBottom,
-                            title: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => setBannerData({ ...bannerData, heroBottom: { ...bannerData.heroBottom, title: e.target.value } })}
                     />
                   </div>
                   <div className="form-group">
@@ -937,51 +836,23 @@ function Admin() {
                       rows="2"
                       required
                       value={bannerData.heroBottom.subtitle}
-                      onChange={(e) =>
-                        setBannerData({
-                          ...bannerData,
-                          heroBottom: {
-                            ...bannerData.heroBottom,
-                            subtitle: e.target.value,
-                          },
-                        })
-                      }
+                      onChange={(e) => setBannerData({ ...bannerData, heroBottom: { ...bannerData.heroBottom, subtitle: e.target.value } })}
                     />
                   </div>
                   <div className="form-group">
                     <label>Зображення:</label>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 8,
-                      }}
-                    >
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <input
                         type="file"
                         accept="image/*"
                         className="custom-file-input"
-                        onChange={(e) =>
-                          handleImageUpload(
-                            e,
-                            setBannerData,
-                            "heroBottom.imageUrl",
-                          )
-                        }
+                        onChange={(e) => handleImageUpload(e, setBannerData, "heroBottom.imageUrl")}
                       />
                       <input
                         type="text"
                         placeholder="Або вставте URL..."
                         value={bannerData.heroBottom.imageUrl}
-                        onChange={(e) =>
-                          setBannerData({
-                            ...bannerData,
-                            heroBottom: {
-                              ...bannerData.heroBottom,
-                              imageUrl: e.target.value,
-                            },
-                          })
-                        }
+                        onChange={(e) => setBannerData({ ...bannerData, heroBottom: { ...bannerData.heroBottom, imageUrl: e.target.value } })}
                       />
                     </div>
                   </div>
@@ -989,11 +860,7 @@ function Admin() {
               </div>
 
               <div style={{ textAlign: "right", marginTop: 10 }}>
-                <button
-                  type="submit"
-                  className="admin-submit-btn"
-                  style={{ padding: "15px 40px", fontSize: 18 }}
-                >
+                <button type="submit" className="admin-submit-btn" style={{ padding: "15px 40px", fontSize: 18 }}>
                   Зберегти всі банери
                 </button>
               </div>

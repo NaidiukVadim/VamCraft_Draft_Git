@@ -3,6 +3,9 @@ import './ProductCard.css';
 import { Link } from 'react-router-dom'; 
 import { useCart } from '../context/CartContext';
 
+// Додаємо константу з адресою нашого бекенду
+const BACKEND_URL = 'http://localhost:5000';
+
 function ProductCard({ product, isRecommendedStyle }) {
   const { addToCart } = useCart();
 
@@ -12,17 +15,26 @@ function ProductCard({ product, isRecommendedStyle }) {
     alert(`Товар "${product.name}" додано в кошик!`);
   };
 
+  // Функція для правильного формування посилання на картинку
+  const getImageUrl = (url) => {
+    if (!url) return 'https://via.placeholder.com/300?text=No+Image'; // Заглушка, якщо фото немає
+    if (url.startsWith('http')) return url; // Якщо це зовнішнє посилання (наприклад, з нашого Seed-файлу)
+    return `${BACKEND_URL}${url}`; // Якщо це фото з нашого сервера (наприклад /uploads/...)
+  };
+
   return (
     <div className={`product-card ${isRecommendedStyle ? 'recommended-card' : ''}`}>
       
       {/* Клікабельна область картки (перехід на сторінку товару) */}
       <Link to={`/product/${product.slug}`} className="product-card-link" style={{ textDecoration: 'none', color: 'inherit' }}>
         <div className="image-placeholder">
-          <img src={product.imageUrl} alt={product.name} />
+          {/* Використовуємо нашу функцію для src */}
+          <img src={getImageUrl(product.imageUrl)} alt={product.name} />
         </div>
         
         <div className="product-info">
-          <p className='product-owner'>{product.owner}</p>
+          {/* Виводимо ім'я майстра з об'єкта seller (як ми це робили в категоріях) */}
+          <p className='product-owner'>{product.seller?.name || 'Невідомий майстер'}</p>
           <h3 className="product-title">{product.name}</h3>
           
           {isRecommendedStyle && (

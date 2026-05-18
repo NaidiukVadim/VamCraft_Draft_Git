@@ -86,13 +86,17 @@ function Home() {
             <div className="filter-item">
               <span className="filter-label-text">Категорія:</span>
               <select 
-                value={selectedCategory} 
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="modern-select"
-              >
-                <option value="">Всі категорії</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+                  value={selectedCategory} 
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="modern-select"
+                >
+                  <option value="">Всі категорії</option>
+                  {categories.map((c, index) => (
+                    <option key={c.id || index} value={c.name || c}>
+                      {c.name || c}
+                    </option>
+                  ))}
+                </select>
             </div>
 
             <div className="filter-divider"></div>
@@ -105,7 +109,11 @@ function Home() {
                 className="modern-select"
               >
                 <option value="">Всі майстри</option>
-                {uniqueSellers.map(s => <option key={s} value={s}>{s}</option>)}
+                {uniqueSellers.map((s, index) => (
+                  <option key={s?.id || index} value={s?.name || s}>
+                    {s?.name || s}
+                  </option>
+                ))}
               </select>
             </div>
 

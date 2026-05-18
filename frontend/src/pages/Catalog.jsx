@@ -21,7 +21,13 @@ function Catalog({ searchQuery = '' }) {
       
       const nameMatches = product.name ? product.name.toLowerCase().includes(query) : false;
       const descMatches = product.description ? product.description.toLowerCase().includes(query) : false;
-      const categoryMatches = product.category ? product.category.toLowerCase().includes(query) : false;
+      
+      // ЗМІНЕНО: Витягуємо ім'я категорії, якщо це об'єкт, інакше використовуємо як текст
+      const categoryName = typeof product.category === 'object' && product.category !== null 
+          ? product.category.name 
+          : product.category;
+          
+      const categoryMatches = categoryName ? categoryName.toLowerCase().includes(query) : false;
       
       const isSearchValid = nameMatches || descMatches || categoryMatches;
 
