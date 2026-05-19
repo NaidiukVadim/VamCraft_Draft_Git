@@ -216,11 +216,11 @@ export const DataProvider = ({ children }) => {
     const fetchData = async () => {
       try {
         // Запит за товарами
-        const resProducts = await fetch('http://localhost:5000/api/products');
+        const resProducts = await fetch('https://vamcraft-draft-git.onrender.com/api/products');
         const dataProducts = await resProducts.json();
         
         // Запит за продавцями
-        const resSellers = await fetch('http://localhost:5000/api/sellers');
+        const resSellers = await fetch('https://vamcraft-draft-git.onrender.com/api/sellers');
         const dataSellers = await resSellers.json();
 
         setProducts(dataProducts);

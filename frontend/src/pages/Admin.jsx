@@ -7,7 +7,7 @@ import heroImg from "../assets/hero-img.svg?url";
 import heroDownImg from "../assets/hero-down-img.png";
 
 // Константа для звернень до бекенду
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = "https://vamcraft-draft-git.onrender.com";
 
 function Admin() {
   const {
