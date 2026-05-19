@@ -1,0 +1,111 @@
+/* src/pages/SellerShop.css */
+.seller-shop-page {
+  padding: 40px 100px;
+  margin-bottom: 60px;
+}
+
+.breadcrumbs {
+  margin-bottom: 25px;
+  color: #666;
+  font-size: 14px;
+}
+
+.breadcrumbs a {
+  color: #D97757;
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.shop-header-card {
+  background-color: #F4E8D8;
+  border-radius: 20px;
+  padding: 40px;
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  margin-bottom: 50px;
+}
+
+.shop-logo {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.shop-info h1 {
+  font-size: 32px;
+  color: #333;
+  margin: 0 0 15px 0;
+}
+
+.shop-description {
+  font-size: 18px;
+  color: #4B5563;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+  max-width: 800px;
+}
+
+.shop-contacts {
+  display: flex;
+  gap: 15px;
+}
+
+.shop-contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  color: #333;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.shop-contact-item:hover {
+  background-color: #D97757;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.shop-products-section h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+.no-products-msg {
+  font-size: 18px;
+  color: #888;
+  text-align: center;
+  padding: 50px 0;
+}
+
+@media (max-width: 1024px) {
+  .seller-shop-page {
+    padding: 20px;
+  }
+  
+  .shop-header-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 30px 20px;
+  }
+
+  .shop-contacts {
+    justify-content: center;
+  }
+}
