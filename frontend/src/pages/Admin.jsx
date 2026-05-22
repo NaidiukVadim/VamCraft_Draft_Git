@@ -59,12 +59,10 @@ function Admin() {
     cancelled:  { label: "Скасовано",    class: "status-cancelled" },
   };
 
-  // Підлаштовуємо фільтрацію під статуси Prisma (вони у нас у верхньому регістрі: NEW, PROCESSING...)
   const filteredOrders = orderFilter === "all"
     ? orders
     : orders.filter(o => o.status.toLowerCase() === orderFilter.toLowerCase());
 
-  // ── Завантаження картинки → blob preview ──
   const handleProductImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -91,7 +89,6 @@ function Admin() {
     reader.readAsDataURL(file);
   };
 
-  // ── Товари ──
   const handleEditProduct = (p) => {
     setProductData({ ...p, imageFile: null });
     setEditingProductId(p.id);
@@ -116,10 +113,8 @@ function Admin() {
 
     try {
       if (editingProductId) {
-        // Редагування — локально (поки бекенд не підтримує PUT)
         updateProduct(editingProductId, {
           ...productData,
-          // якщо blob — при наступному завантаженні сторінки все одно підтягнеться з бекенду
         });
         alert("Товар оновлено локально!");
       } else {
@@ -150,47 +145,74 @@ function Admin() {
     if (window.confirm("Видалити товар?")) deleteProduct(id);
   };
 
-  // ── Продавці ──
   const handleEditSeller = (s) => {
     setSellerData({ ...s, logoFile: null });
     setEditingSellerId(s.id);
     setSellerView("create");
   };
 
-  const handleSellerSubmit = (e) => {
+  const handleSellerSubmit = async (e) => {
     e.preventDefault();
-    if (editingSellerId) {
-      updateSeller(editingSellerId, sellerData);
-      alert("Дані продавця оновлено!");
-      products.forEach(p => {
-        if (String(p.sellerId) === String(editingSellerId))
-          updateProduct(p.id, { owner: sellerData.name });
-      });
-    } else {
-      addSeller(sellerData);
-      alert("Продавця успішно додано!");
+
+    const formData = new FormData();
+    formData.append("name", sellerData.name);
+    formData.append("description", sellerData.description);
+    formData.append("phone", sellerData.phone);
+    formData.append("telegram", sellerData.telegram);
+
+    // ВАЖЛИВО: додаємо файл або URL
+    if (sellerData.logoFile) {
+      formData.append("logo", sellerData.logoFile);
+    } else if (sellerData.logoUrl && !sellerData.logoUrl.startsWith("blob:")) {
+      formData.append("logoUrl", sellerData.logoUrl);
     }
-    setSellerData(initialSellerState);
-    setEditingSellerId(null);
-    setSellerView("list");
+
+    try {
+      if (editingSellerId) {
+        updateSeller(editingSellerId, sellerData);
+        alert("Дані продавця оновлено локально!");
+        products.forEach(p => {
+          if (String(p.sellerId) === String(editingSellerId))
+            updateProduct(p.id, { owner: sellerData.name });
+        });
+      } else {
+        const res = await fetch(`${BACKEND_URL}/api/sellers`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (res.ok) {
+          const savedSeller = await res.json();
+          addSeller(savedSeller); 
+          alert("Продавця успішно додано в базу даних!");
+        } else {
+          const err = await res.text();
+          alert(`Помилка сервера: ${err}`);
+          return;
+        }
+      }
+      setSellerData(initialSellerState);
+      setEditingSellerId(null);
+      setSellerView("list");
+    } catch (err) {
+      console.error(err);
+      alert("Не вдалося з'єднатися з сервером.");
+    }
   };
 
   const handleDeleteSeller = (id) => {
     if (window.confirm("Видалити продавця разом з усіма його товарами?")) deleteSeller(id);
   };
 
-  // ── Замовлення ──
   const toggleOrderDetails = (id) =>
     setSelectedOrderId(selectedOrderId === id ? null : id);
 
-  // ── Банери ──
   const handleBannerSubmit = (e) => {
     e.preventDefault();
     if (updateBanners) { updateBanners(bannerData); alert("Банери успішно оновлено!"); }
     else               { alert("Помилка: updateBanners не знайдено в DataContext."); }
   };
 
-  /* ── Хелпери кнопок ── */
   const BackBtn = ({ onClick }) => (
     <button className="back-btn btn-with-icon" onClick={onClick}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -211,8 +233,6 @@ function Admin() {
 
   return (
     <div className="admin-page">
-
-      {/* САЙДБАР */}
       <div className="admin-sidebar">
         <h2>Admin Panel</h2>
         {[
@@ -233,7 +253,6 @@ function Admin() {
         ))}
       </div>
 
-      {/* КОНТЕНТ */}
       <div className="admin-content">
 
         {/* ══ ТОВАРИ ══ */}
@@ -366,9 +385,18 @@ function Admin() {
                   <label>Логотип магазину:</label>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <input type="file" accept="image/*" className="custom-file-input"
-                      onChange={e => handleImageUpload(e, setSellerData, "logoUrl")}/>
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        setSellerData(prev => ({
+                          ...prev,
+                          logoUrl: URL.createObjectURL(file),
+                          logoFile: file 
+                        }));
+                      }}
+                    />
                     <input type="text" placeholder="Або вставте URL..." value={sellerData.logoUrl}
-                      onChange={e => setSellerData({...sellerData, logoUrl: e.target.value})}/>
+                      onChange={e => setSellerData({...sellerData, logoUrl: e.target.value, logoFile: null})}/>
                   </div>
                   {sellerData.logoUrl && (
                     <img src={sellerData.logoUrl} alt="preview"

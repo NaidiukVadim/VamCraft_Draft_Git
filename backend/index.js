@@ -1,6 +1,6 @@
 // backend/index.js
 import express from 'express';
-import cors from 'cors'; // Правильний імпорт
+import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
@@ -9,11 +9,11 @@ import fs from 'fs';
 const app = express();
 const prisma = new PrismaClient();
 
-// Налаштування CORS (тільки один раз, правильний конфіг)
+// Налаштування CORS
 app.use(cors({
   origin: [
-    "https://naidiukvadim.github.io", // Для твого живого сайту в інтернеті
-    "http://localhost:5173"           // Для твоєї локальної розробки
+    "https://naidiukvadim.github.io", 
+    "http://localhost:5173"           
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
@@ -95,8 +95,11 @@ app.get('/api/sellers', async (req, res) => {
 
 app.post('/api/sellers', upload.single('logo'), async (req, res) => {
   try {
-    const { name, description, phone, telegram, slug } = req.body;
-    const logoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    // Дістаємо logoUrl з текстових полів форми (на випадок, якщо це посилання з інтернету)
+    const { name, description, phone, telegram, slug, logoUrl: bodyLogoUrl } = req.body;
+    
+    // ВАЖЛИВО: Перевіряємо, що саме прийшло. Файл - в пріоритеті, інакше - текстове посилання.
+    const finalLogoUrl = req.file ? `/uploads/${req.file.filename}` : (bodyLogoUrl || null);
 
     const newSeller = await prisma.seller.create({
       data: {
@@ -105,7 +108,7 @@ app.post('/api/sellers', upload.single('logo'), async (req, res) => {
         description,
         phone,
         telegram,
-        logoUrl: logoUrl,
+        logoUrl: finalLogoUrl, // Тепер тут збережеться URL, якщо ти його ввів
         isActive: true,
       }
     });
