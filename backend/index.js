@@ -44,6 +44,7 @@ const upload = multer({ storage: storage });
 // API МАРШРУТИ
 // ==========================================
 
+// --- ТОВАРИ ---
 // Отримати всі товари
 app.get('/api/products', async (req, res) => {
   try {
@@ -56,6 +57,39 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
+// СТВОРИТИ НОВИЙ ТОВАР (з картинкою)
+app.post('/api/products', upload.single('image'), async (req, res) => {
+  try {
+    const { name, description, price, categoryId, sellerId, slug } = req.body;
+    
+    // Формуємо посилання на фото (якщо воно є)
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const newProduct = await prisma.product.create({
+      data: {
+        name,
+        slug: slug || `${Date.now()}`,
+        description,
+        price: parseFloat(price),
+        imageUrl: imageUrl, 
+        categoryId: parseInt(categoryId),
+        sellerId: parseInt(sellerId),
+      },
+      // Обов'язково повертаємо дані продавця і категорії
+      include: {
+        seller: true,
+        category: true
+      }
+    });
+    
+    res.json(newProduct);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Помилка при створенні товару" });
+  }
+});
+
+// --- ПРОДАВЦІ ---
 // Отримати всіх продавців
 app.get('/api/sellers', async (req, res) => {
   try {
@@ -66,31 +100,66 @@ app.get('/api/sellers', async (req, res) => {
   }
 });
 
-// СТВОРИТИ НОВИЙ ТОВАР (з картинкою)
-app.post('/api/products', upload.single('image'), async (req, res) => {
+// СТВОРИТИ НОВОГО ПРОДАВЦЯ
+app.post('/api/sellers', upload.single('logo'), async (req, res) => {
   try {
-    // req.body містить текст, req.file містить файл
-    const { name, description, price, categoryId, sellerId, slug } = req.body;
+    const { name, description, phone, telegram, slug } = req.body;
     
-    // Формуємо посилання на фото (якщо воно є)
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const logoUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
-    const newProduct = await prisma.product.create({
+    const newSeller = await prisma.seller.create({
       data: {
         name,
-        slug: slug || `${Date.now()}`, // Тимчасовий слагогенератор
+        slug: slug || `seller-${Date.now()}`,
         description,
-        price: parseFloat(price),
-        imageUrl: imageUrl, 
-        categoryId: parseInt(categoryId),
-        sellerId: parseInt(sellerId),
+        phone,
+        telegram,
+        logoUrl: logoUrl,
+        isActive: true,
       }
     });
     
-    res.json(newProduct);
+    res.json(newSeller);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Помилка при створенні товару" });
+    res.status(500).json({ error: "Помилка при створенні продавця" });
+  }
+});
+
+// --- ЗАМОВЛЕННЯ ---
+// СТВОРИТИ НОВЕ ЗАМОВЛЕННЯ
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { customerName, customerPhone, city, postBranch, comment, totalPrice, items } = req.body;
+
+    const newOrder = await prisma.order.create({
+      data: {
+        customerName,
+        customerPhone,
+        city,
+        postBranch,
+        comment: comment || "",
+        totalPrice: parseFloat(totalPrice),
+        status: "NEW", // Відповідно до твого enum OrderStatus
+        // Зберігаємо товари у зв'язану таблицю orderItems
+        orderItems: {
+          create: items.map(item => ({
+            productId: parseInt(item.id),
+            sellerId: parseInt(item.sellerId), // Обов'язкове поле
+            quantity: parseInt(item.quantity),
+            priceAtPurchase: parseFloat(item.price)
+          }))
+        }
+      },
+      include: {
+        orderItems: true // Повертаємо збережене замовлення разом із товарами
+      }
+    });
+
+    res.json(newOrder);
+  } catch (error) {
+    console.error("Помилка при збереженні замовлення:", error);
+    res.status(500).json({ error: "Не вдалося зберегти замовлення" });
   }
 });
 

@@ -10,7 +10,7 @@ const NP_API_KEY = '40851768e0b7810855658e7d0f463e70';
 
 function Cart() {
   const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart(); 
-  const { addOrder } = useData();
+  const { addOrder } = useData(); // Можна залишити для локального стейту, якщо потрібно
   const navigate = useNavigate(); 
 
   const [formData, setFormData] = useState({
@@ -40,7 +40,7 @@ function Cart() {
           calledMethod: 'getCities',
           methodProperties: {
             FindByString: query,
-            Limit: "50" // Обмежуємо, щоб не вантажити тисячі сіл одночасно
+            Limit: "50" 
           }
         })
       });
@@ -78,53 +78,74 @@ function Cart() {
     }
   };
 
-  // Звичайний обробник для всіх текстових полів
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Спеціальний обробник для поля Місто (щоб робити запити на API)
   const handleCityChange = (e) => {
     const val = e.target.value;
     setFormData(prev => ({ ...prev, city: val, postBranch: '' }));
-    setBranches([]); // Очищаємо відділення, якщо місто змінилось
+    setBranches([]); 
 
-    // Перевіряємо, чи введений текст повністю співпадає з містом у нашому списку
     const matchedCity = cities.find(c => c.Description === val);
     
     if (matchedCity) {
-      // Якщо місто обрано зі списку, завантажуємо його відділення
       fetchBranches(matchedCity.Ref);
     } else if (val.length >= 2) {
-      // Якщо юзер тільки почал вводити (мінімум 2 букви), шукаємо міста
       fetchCities(val);
     }
   };
 
-  const handleCheckout = (e) => {
+  // Оновлена функція відправки на бекенд
+  const handleCheckout = async (e) => {
     e.preventDefault();
 
     if (cartItems.length === 0) return;
 
+    // Формуємо об'єкт для відправки (назви полів відповідають схемі бекенду)
     const orderData = {
       customerName: formData.name,
       customerPhone: formData.phone,
       city: formData.city,
       postBranch: formData.postBranch,
       comment: formData.comment,
-      totalAmount: totalPrice,
+      totalPrice: totalPrice,
       items: cartItems.map(item => ({
         id: item.id,
-        name: item.name,
         price: item.price,
-        quantity: item.quantity
+        quantity: item.quantity,
+        sellerId: item.sellerId
       }))
     };
 
-    addOrder(orderData);
-    clearCart();
-    navigate('/confirmation');
+    try {
+      const response = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (response.ok) {
+        // Якщо бекенд успішно зберіг
+        const savedOrder = await response.json();
+        
+        // Оновлюємо локальний стейт (щоб в адмінці одразу з'явилося без оновлення сторінки)
+        if (addOrder) {
+          addOrder(savedOrder);
+        }
+        
+        clearCart();
+        navigate('/confirmation');
+      } else {
+        alert("Виникла помилка при оформленні замовлення на сервері.");
+      }
+    } catch (error) {
+      console.error("Помилка з'єднання з сервером:", error);
+      alert("Не вдалося відправити замовлення. Перевірте з'єднання.");
+    }
   };
 
   if (cartItems.length === 0) {
@@ -157,7 +178,7 @@ function Cart() {
                 <img src={item.imageUrl} alt={item.name} className="cart-item-image" />
                 <div className="cart-item-info">
                   <h3>{item.name}</h3>
-                  <p className="cart-item-seller">Майстерня: {item.owner}</p>
+                  <p className="cart-item-seller">Майстерня: {item.seller?.name || item.owner || 'Невідомо'}</p>
                   <div className="cart-item-price">{item.price} ₴</div>
                 </div>
                 <div className="cart-item-controls">
