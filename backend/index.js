@@ -10,7 +10,15 @@ const app = express();
 const prisma = new PrismaClient();
 
 // Налаштування CORS та JSON
-app.use(cors());
+const cors = require('cors');
+
+// Дозволяємо запити саме з твого сайту на GitHub Pages
+app.use(cors({
+  origin: "https://naidiukvadim.github.io", 
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // ==========================================
