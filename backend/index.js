@@ -127,6 +127,31 @@ app.post('/api/sellers', upload.single('logo'), async (req, res) => {
 });
 
 // --- ЗАМОВЛЕННЯ ---
+// Отримати всі замовлення
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        orderItems: true // Обов'язково підтягуємо товари з бази
+      },
+      orderBy: {
+        createdAt: 'desc' // Щоб найновіші замовлення були зверху
+      }
+    });
+
+    // Підлаштовуємо дані під фронтенд (перейменовуємо orderItems в items)
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      items: order.orderItems 
+    }));
+
+    res.json(formattedOrders);
+  } catch (error) {
+    console.error("Помилка при отриманні замовлень:", error);
+    res.status(500).json({ error: "Не вдалося отримати замовлення" });
+  }
+});
+
 // СТВОРИТИ НОВЕ ЗАМОВЛЕННЯ
 app.post('/api/orders', async (req, res) => {
   try {

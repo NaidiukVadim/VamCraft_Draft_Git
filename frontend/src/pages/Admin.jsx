@@ -46,6 +46,7 @@ function Admin() {
   useEffect(() => { if (banners) setBannerData(banners); }, [banners]);
 
   const formatDate = (iso) => {
+    if (!iso) return "Дата невідома";
     const d = new Date(iso);
     return d.toLocaleDateString("uk-UA") + " " +
       d.toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" });
@@ -58,9 +59,10 @@ function Admin() {
     cancelled:  { label: "Скасовано",    class: "status-cancelled" },
   };
 
+  // Підлаштовуємо фільтрацію під статуси Prisma (вони у нас у верхньому регістрі: NEW, PROCESSING...)
   const filteredOrders = orderFilter === "all"
     ? orders
-    : orders.filter(o => o.status === orderFilter);
+    : orders.filter(o => o.status.toLowerCase() === orderFilter.toLowerCase());
 
   // ── Завантаження картинки → blob preview ──
   const handleProductImageUpload = (e) => {
@@ -257,9 +259,9 @@ function Admin() {
                   {products.map(p => (
                     <tr key={p.id}>
                       <td data-label="Назва">{p.name}</td>
-                      <td data-label="Майстерня"><strong>{p.owner}</strong></td>
+                      <td data-label="Майстерня"><strong>{p.owner || (p.seller && p.seller.name)}</strong></td>
                       <td data-label="Ціна">{p.price} ₴</td>
-                      <td data-label="На гол."><input type="checkbox" checked={p.isRecommended} readOnly/></td>
+                      <td data-label="На гол."><input type="checkbox" checked={p.isRecommended || false} readOnly/></td>
                       <td data-label="Дії" className="actions-cell">
                         <button onClick={() => handleEditProduct(p)} className="btn-edit">Ред.</button>
                         <button onClick={() => handleDeleteProduct(p.id)} className="btn-disable">Видал.</button>
@@ -392,10 +394,10 @@ function Admin() {
             <div className="order-tabs-container">
               {[
                 { id: "all",        label: `Всі (${orders.length})` },
-                { id: "new",        label: `Нові (${orders.filter(o => o.status === "new").length})` },
-                { id: "processing", label: `В обробці (${orders.filter(o => o.status === "processing").length})` },
-                { id: "completed",  label: `Завершені (${orders.filter(o => o.status === "completed").length})` },
-                { id: "cancelled",  label: `Скасовані (${orders.filter(o => o.status === "cancelled").length})` },
+                { id: "new",        label: `Нові (${orders.filter(o => o.status.toLowerCase() === "new").length})` },
+                { id: "processing", label: `В обробці (${orders.filter(o => o.status.toLowerCase() === "processing").length})` },
+                { id: "completed",  label: `Завершені (${orders.filter(o => o.status.toLowerCase() === "completed").length})` },
+                { id: "cancelled",  label: `Скасовані (${orders.filter(o => o.status.toLowerCase() === "cancelled").length})` },
               ].map(tab => (
                 <button key={tab.id}
                   className={`order-tab ${orderFilter === tab.id ? "active" : ""}`}
@@ -414,18 +416,19 @@ function Admin() {
                 </thead>
                 <tbody>
                   {filteredOrders.map(order => {
-                    const statusInfo = orderStatuses[order.status] || orderStatuses.new;
+                    const statusKey = order.status ? order.status.toLowerCase() : "new";
+                    const statusInfo = orderStatuses[statusKey] || orderStatuses.new;
                     const isExpanded = selectedOrderId === order.id;
                     return (
                       <React.Fragment key={order.id}>
                         <tr className={isExpanded ? "expanded-row" : ""}>
-                          <td data-label="№">{order.id.split("_")[1]}</td>
-                          <td data-label="Дата">{formatDate(order.date)}</td>
+                          <td data-label="№">{order.id}</td>
+                          <td data-label="Дата">{formatDate(order.createdAt || order.date)}</td>
                           <td data-label="Клієнт">
                             <strong>{order.customerName}</strong><br/>
                             <span className="text-muted">{order.customerPhone}</span>
                           </td>
-                          <td data-label="Сума" className="price-cell">{order.totalAmount} ₴</td>
+                          <td data-label="Сума" className="price-cell">{order.totalPrice || order.totalAmount} ₴</td>
                           <td data-label="Статус">
                             <span className={`status-badge ${statusInfo.class}`}>{statusInfo.label}</span>
                           </td>
@@ -433,8 +436,8 @@ function Admin() {
                             <button onClick={() => toggleOrderDetails(order.id)} className="btn-view">
                               {isExpanded ? "Сховати" : "Деталі"}
                             </button>
-                            <select value={order.status}
-                              onChange={e => updateOrderStatus(order.id, e.target.value)}
+                            <select value={statusKey}
+                              onChange={e => updateOrderStatus(order.id, e.target.value.toUpperCase())}
                               className="status-select-inline">
                               {Object.entries(orderStatuses).map(([k, v]) => (
                                 <option key={k} value={k}>{v.label}</option>
@@ -451,11 +454,11 @@ function Admin() {
                                 </div>
                                 <h4>Склад замовлення:</h4>
                                 <ul>
-                                  {order.items.map(item => (
+                                  {order.items?.map(item => (
                                     <li key={item.id} className="order-item-detail">
-                                      <span className="item-name">{item.name}</span>
+                                      <span className="item-name">{item.name || `Товар ID: ${item.productId}`}</span>
                                       <span className="item-meta">
-                                        {item.quantity} шт. × {item.price} ₴ = <strong>{item.quantity * item.price} ₴</strong>
+                                        {item.quantity} шт. × {item.priceAtPurchase || item.price} ₴ = <strong>{item.quantity * (item.priceAtPurchase || item.price)} ₴</strong>
                                       </span>
                                     </li>
                                   ))}
