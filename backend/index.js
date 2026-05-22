@@ -11,7 +11,10 @@ const prisma = new PrismaClient();
 
 // Налаштування CORS (тільки один раз, правильний конфіг)
 app.use(cors({
-  origin: "https://naidiukvadim.github.io", 
+  origin: [
+    "https://naidiukvadim.github.io", // Для твого живого сайту в інтернеті
+    "http://localhost:5173"           // Для твоєї локальної розробки
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
