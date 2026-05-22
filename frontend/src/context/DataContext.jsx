@@ -9,17 +9,14 @@ export const normalizeImageUrl = (url) => {
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url;
   }
-  // відносний шлях з бекенду → додаємо базовий URL
   return `${BACKEND_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
-// ── Нормалізуємо товар з бекенду у єдину форму ──
+// ── Нормалізуємо товар ──
 const normalizeProduct = (p) => ({
   ...p,
-  // бекенд може повертати seller як об'єкт або sellerId як число
   owner:    p.owner || p.seller?.name || 'Невідомий майстер',
   sellerId: String(p.sellerId || p.seller?.id || ''),
-  // category може бути об'єктом або рядком
   category: p.category?.name ?? p.category ?? '',
   imageUrl: normalizeImageUrl(p.imageUrl || p.image_url || p.image || ''),
   id:       String(p.id),
@@ -55,13 +52,9 @@ const DataContext = createContext();
 export const DataProvider = ({ children }) => {
   const [products,  setProducts]  = useState([]);
   const [sellers,   setSellers]   = useState([]);
+  const [orders,    setOrders]    = useState([]); // ПОВНІСТЮ ОЧИСТИЛИ ВІД LOCAL STORAGE
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
-
-  const [orders, setOrders] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('app_orders') || '[]'); }
-    catch { return []; }
-  });
 
   const initialBanners = {
     heroTop:    { title: 'Унікальні вироби ручної роботи', subtitle: 'Знайдіть ідеальний подарунок або прикрасу для себе', imageUrl: '' },
@@ -73,28 +66,36 @@ export const DataProvider = ({ children }) => {
     catch { return initialBanners; }
   });
 
-  // ── Завантаження з бекенду ──
+  // ── Завантаження з бекенду (БЕЗ КЕШУ) ──
   useEffect(() => {
     const fetchAll = async () => {
       setIsLoading(true);
       setFetchError(null);
       try {
-        const [resP, resS] = await Promise.all([
-          fetch(`${BACKEND_URL}/api/products`),
-          fetch(`${BACKEND_URL}/api/sellers`),
+        const fetchOptions = { cache: 'no-store' }; // Забороняємо браузерам кешувати дані!
+
+        // Завантажуємо ОДНОЧАСНО товари, продавців і ЗАМОВЛЕННЯ
+        const [resP, resS, resO] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/products`, fetchOptions),
+          fetch(`${BACKEND_URL}/api/sellers`, fetchOptions),
+          fetch(`${BACKEND_URL}/api/orders`, fetchOptions), 
         ]);
 
         if (!resP.ok) throw new Error(`Products: ${resP.status}`);
         if (!resS.ok) throw new Error(`Sellers: ${resS.status}`);
+        if (!resO.ok) throw new Error(`Orders: ${resO.status}`);
 
-        const [rawProducts, rawSellers] = await Promise.all([
+        const [rawProducts, rawSellers, rawOrders] = await Promise.all([
           resP.json(),
           resS.json(),
+          resO.json(),
         ]);
 
-        // Нормалізуємо перед збереженням у стан
+        // Зберігаємо справжні дані в стан React
         setProducts((Array.isArray(rawProducts) ? rawProducts : rawProducts.data ?? []).map(normalizeProduct));
         setSellers((Array.isArray(rawSellers)   ? rawSellers   : rawSellers.data   ?? []).map(normalizeSeller));
+        setOrders(Array.isArray(rawOrders) ? rawOrders : []); 
+
       } catch (err) {
         console.error('Помилка завантаження:', err);
         setFetchError(err.message);
@@ -105,8 +106,7 @@ export const DataProvider = ({ children }) => {
     fetchAll();
   }, []);
 
-  // ── Persist ──
-  useEffect(() => { localStorage.setItem('app_orders',  JSON.stringify(orders));  }, [orders]);
+  // Банери залишаємо в localStorage (поки для них немає бекенду)
   useEffect(() => { localStorage.setItem('app_banners', JSON.stringify(banners)); }, [banners]);
 
   // ── Продавці ──
@@ -132,13 +132,17 @@ export const DataProvider = ({ children }) => {
     setProducts(prev => prev.filter(p => p.id !== String(id)));
 
   // ── Замовлення ──
-  const addOrder = (details) => {
-    const order = { id: `order_${Date.now()}`, date: new Date().toISOString(), status: 'new', ...details };
-    setOrders(prev => [order, ...prev]);
-    return order.id;
+  const addOrder = (orderFromServer) => {
+    // Тепер ми просто додаємо готове замовлення, яке прилетіло з бекенду (з Cart.jsx)
+    setOrders(prev => [orderFromServer, ...prev]);
   };
-  const updateOrderStatus = (id, status) =>
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+  
+  const updateOrderStatus = (id, status) => {
+    // Оновлюємо статус в інтерфейсі (адмінці)
+    setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, status } : o));
+    
+    // Щоб статус зберігався в базі, пізніше сюди треба буде дописати fetch PUT запит до бекенду
+  };
 
   // ── Банери ──
   const updateBanners = (b) => setBanners(b);
