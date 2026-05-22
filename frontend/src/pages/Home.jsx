@@ -1,29 +1,26 @@
 // src/pages/Home.jsx
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import CountUp from 'react-countup';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
 import ProductCard from '../components/ProductCard';
 import { useData } from '../context/DataContext';
 
-import heroImg from '../assets/hero-img.svg?url'; 
+import heroImg     from '../assets/hero-img.svg?url';
 import heroDownImg from '../assets/hero-down-img.png';
 
 function Home() {
   useEffect(() => {
-    AOS.init({
-      duration: 800,
-      once: true,
-    });
+    AOS.init({ duration: 800, once: true });
   }, []);
 
-  const { products, sellers, banners } = useData();
+  const { products, sellers, banners, isLoading } = useData();
 
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSeller, setSelectedSeller] = useState('');
+  const [selectedSeller,   setSelectedSeller]   = useState('');
 
+  // Категорії — product.category вже нормалізований у рядок у DataContext
   const categories = useMemo(() => {
     return [...new Set(products.map(p => p.category).filter(Boolean))];
   }, [products]);
@@ -34,24 +31,28 @@ function Home() {
 
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      const matchCategory = selectedCategory === '' || product.category === selectedCategory;
-      const matchSeller = selectedSeller === '' || product.owner === selectedSeller;
-      return matchCategory && matchSeller;
+      const matchCat    = selectedCategory === '' || product.category === selectedCategory;
+      const matchSeller = selectedSeller   === '' || product.owner    === selectedSeller;
+      return matchCat && matchSeller;
     });
   }, [products, selectedCategory, selectedSeller]);
 
   const isFiltering = selectedCategory !== '' || selectedSeller !== '';
 
   const recommendedProducts = products.filter(p => p.isRecommended);
-  const popularProducts = [...products]
-    .sort((a, b) => b.salesCount - a.salesCount)
-    .slice(0, 4);
+  const popularProducts     = [...products].sort((a, b) => b.salesCount - a.salesCount).slice(0, 4);
 
-  const btmRef = useRef();
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <p style={{ color: '#777', fontSize: 18 }}>Завантаження...</p>
+      </div>
+    );
+  }
 
   return (
     <>
-      {/* --- ВЕРХНЯ ЧАСТИНА (HERO SECTION) --- */}
+      {/* HERO */}
       <div className="hero-section">
         <div className="left-part">
           <div className="top">
@@ -75,57 +76,53 @@ function Home() {
           </div>
         </div>
         <div className="right-part">
-          <img src={banners?.heroTop?.imageUrl || heroImg} alt="hero image" />
+          {/* Показуємо локальне зображення якщо з бекенду нема */}
+          <img
+            src={banners?.heroTop?.imageUrl || heroImg}
+            alt="hero image"
+            onError={e => { e.target.src = heroImg; }}
+          />
         </div>
       </div>
 
       <main>
-        {/* --- ПАНЕЛЬ ФІЛЬТРІВ --- */}
+        {/* ФІЛЬТРИ */}
         <div className="home-filters-wrapper">
           <div className="home-filters-bar">
             <div className="filter-item">
               <span className="filter-label-text">Категорія:</span>
-              <select 
-                  value={selectedCategory} 
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="modern-select"
-                >
-                  <option value="">Всі категорії</option>
-                  {categories.map((c, index) => (
-                    <option key={c.id || index} value={c.name || c}>
-                      {c.name || c}
-                    </option>
-                  ))}
-                </select>
+              <select
+                value={selectedCategory}
+                onChange={e => setSelectedCategory(e.target.value)}
+                className="modern-select"
+              >
+                <option value="">Всі категорії</option>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
 
-            <div className="filter-divider"></div>
+            <div className="filter-divider"/>
 
             <div className="filter-item">
               <span className="filter-label-text">Майстер:</span>
-              <select 
-                value={selectedSeller} 
-                onChange={(e) => setSelectedSeller(e.target.value)}
+              <select
+                value={selectedSeller}
+                onChange={e => setSelectedSeller(e.target.value)}
                 className="modern-select"
               >
                 <option value="">Всі майстри</option>
-                {uniqueSellers.map((s, index) => (
-                  <option key={s?.id || index} value={s?.name || s}>
-                    {s?.name || s}
-                  </option>
-                ))}
+                {uniqueSellers.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
 
             {isFiltering && (
-              <button 
+              <button
                 onClick={() => { setSelectedCategory(''); setSelectedSeller(''); }}
                 className="modern-reset-btn"
-                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
                 Скинути
               </button>
@@ -134,26 +131,24 @@ function Home() {
         </div>
 
         {isFiltering ? (
-          <div className="filtered-results-section animate-fade-in" key={`${selectedCategory}-${selectedSeller}`}>
-            <h2 className='filter-search-text'>Результати пошуку ({filteredProducts.length})</h2>
-            <div className="products-grid" style={{ marginBottom: '40px' }}>
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))
-              ) : (
-                <p>На жаль, за вашими критеріями нічого не знайдено.</p>
-              )}
+          <div className="filtered-results-section" key={`${selectedCategory}-${selectedSeller}`}>
+            <h2 className="filter-search-text">Результати пошуку ({filteredProducts.length})</h2>
+            <div className="products-grid" style={{ marginBottom: 40 }}>
+              {filteredProducts.length > 0
+                ? filteredProducts.map(p => <ProductCard key={p.id} product={p} />)
+                : <p>На жаль, за вашими критеріями нічого не знайдено.</p>
+              }
             </div>
           </div>
         ) : (
           <>
+            {/* ПОПУЛЯРНІ */}
             <div className="main-head">
               <h2>Популярні товари</h2>
-              <div className='arrow-container'>
+              <div className="arrow-container">
                 <Link to="/catalog" className="view-all-link">
                   Дивитись усі
-                  <svg className="arrow-icon" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg className="arrow-icon" viewBox="0 0 14 12" fill="none">
                     <path d="M13.7063 6.70859C14.0969 6.31797 14.0969 5.68359 13.7063 5.29297L8.70625 0.292969C8.31563 -0.0976562 7.68125 -0.0976562 7.29063 0.292969C6.9 0.683594 6.9 1.31797 7.29063 1.70859L10.5875 5.00234H1C0.446875 5.00234 0 5.44922 0 6.00234C0 6.55547 0.446875 7.00234 1 7.00234H10.5844L7.29375 10.2961C6.90312 10.6867 6.90312 11.3211 7.29375 11.7117C7.68437 12.1023 8.31875 12.1023 8.70938 11.7117L13.7094 6.71172L13.7063 6.70859Z" fill="#D97757"/>
                   </svg>
                 </Link>
@@ -161,30 +156,38 @@ function Home() {
             </div>
 
             <div className="products-grid">
-              {popularProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+              {popularProducts.map(p => <ProductCard key={p.id} product={p} />)}
             </div>
 
+            {/* РЕКОМЕНДОВАНІ */}
             <div className="recommended-section">
               <h2>Рекомендовані товари</h2>
-              <p className='choosen-cards-admin'>Обрані адміністратором спеціально для вас</p> 
+              <p className="choosen-cards-admin">Обрані адміністратором спеціально для вас</p>
               <div className="products-grid rec-sec">
-                {recommendedProducts.map(product => (
-                  <ProductCard key={product.id} product={product} isRecommendedStyle={true} />
+                {recommendedProducts.map(p => (
+                  <ProductCard key={p.id} product={p} isRecommendedStyle={true} />
                 ))}
               </div>
             </div>
 
+            {/* HERO BTM */}
             <div className="hero-section-btm">
               <div className="right-part" data-aos="fade-right">
-                <img src={banners?.heroBottom?.imageUrl || heroDownImg} alt="hero image" className="floating-img" />
+                <img
+                  src={banners?.heroBottom?.imageUrl || heroDownImg}
+                  alt="hero image"
+                  className="floating-img"
+                  onError={e => { e.target.src = heroDownImg; }}
+                />
               </div>
-              
               <div className="left-part">
                 <div className="top">
-                  <h1 data-aos="fade-up" data-aos-delay="100">{banners?.heroBottom?.title || 'Речі, що мають душу'}</h1>
-                  <p data-aos="fade-up" data-aos-delay="300">{banners?.heroBottom?.subtitle || 'Відкрийте для себе крафтові майстерні України та оберіть унікальні вироби ручної роботи.'}</p>
+                  <h1 data-aos="fade-up" data-aos-delay="100">
+                    {banners?.heroBottom?.title || 'Речі, що мають душу'}
+                  </h1>
+                  <p data-aos="fade-up" data-aos-delay="300">
+                    {banners?.heroBottom?.subtitle || 'Відкрийте для себе крафтові майстерні України.'}
+                  </p>
                   <div data-aos="fade-up" data-aos-delay="500">
                     <Link to="/markets">Список доступних магазинів</Link>
                   </div>
@@ -192,29 +195,33 @@ function Home() {
               </div>
             </div>
 
+            {/* МАЙСТРИ */}
             <div className="home-masters-section">
               <div className="masters-header-center">
                 <h2>Наші майстри</h2>
                 <p>Познайомтесь з талановитими українськими ремісниками</p>
               </div>
-              
               <div className="home-masters-grid">
                 {sellers.slice(0, 4).map(seller => {
-                  const productCount = products.filter(p => p.sellerId === seller.id).length;
+                  const productCount = products.filter(p => String(p.sellerId) === String(seller.id)).length;
                   return (
                     <div key={seller.id} className="home-master-card">
-                      <img src={seller.logoUrl} alt={seller.name} className="home-master-logo" />
+                      <img
+                        src={seller.logoUrl || ''}
+                        alt={seller.name}
+                        className="home-master-logo"
+                        onError={e => { e.target.style.display = 'none'; }}
+                      />
                       <h3 className="home-master-name">{seller.name}</h3>
                       <p className="home-master-desc">{seller.description}</p>
                       <div className="home-master-stats">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                          <path d="M3 9h18"></path>
-                          <path d="M9 21V9"></path>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
                         </svg>
                         <span>{productCount} товарів</span>
                       </div>
-                      <Link to={`/markets/${seller.slug || seller.id}`} className="home-master-btn">
+                      {/* slug гарантований через normalizeSeller */}
+                      <Link to={`/markets/${seller.slug}`} className="home-master-btn">
                         Відвідати магазин
                       </Link>
                     </div>
@@ -224,7 +231,7 @@ function Home() {
             </div>
           </>
         )}
-      </main> 
+      </main>
     </>
   );
 }
