@@ -11,29 +11,7 @@ import ProductDetails   from './pages/ProductDetails';
 import OrderConfirmation from './pages/OrderConfirmation';
 import { useCart }      from './context/CartContext';
 import './App.css';
-
-// ── Кнопка «вгору» — вбудована щоб не тягнути окремий файл ──
-function ScrollToTopButton() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 300);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  return (
-    <button
-      className={`scroll-to-top-btn ${visible ? 'visible' : ''}`}
-      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      aria-label="Вгору"
-    >
-      <svg viewBox="0 0 24 24">
-        <polyline points="18 15 12 9 6 15" />
-      </svg>
-    </button>
-  );
-}
+import ScrollToTopButton from './components/ScrollToTopButton';
 
 function App() {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);

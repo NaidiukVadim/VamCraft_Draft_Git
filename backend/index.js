@@ -1,10 +1,11 @@
 // backend/index.js
+import 'dotenv/config'; // Це дозволить Node.js прочитати файл .env
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -20,22 +21,32 @@ app.use(cors({
 
 app.use(express.json());
 
-const uploadDir = './uploads';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-app.use('/uploads', express.static('uploads'));
+// ==========================================
+// НАЛАШТУВАННЯ CLOUDINARY ТА MULTER
+// ==========================================
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); 
-  }
+// 1. Конфігурація Cloudinary з файлу .env
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// 2. Налаштування сховища для прямого завантаження у хмару
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'vamcraft', // Папка, яка створиться в твоєму Cloudinary
+    format: async (req, file) => 'png', // Формат збереження
+    public_id: (req, file) => `${Date.now()}-${file.originalname.split('.')[0]}`,
+  },
+});
+
 const upload = multer({ storage: storage });
+
+// ==========================================
+// API МАРШРУТИ
+// ==========================================
 
 // --- ТОВАРИ ---
 app.get('/api/products', async (req, res) => {
@@ -51,8 +62,11 @@ app.get('/api/products', async (req, res) => {
 
 app.post('/api/products', upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, categoryId, sellerId, slug, isRecommended, showOnHome } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const { name, description, price, categoryId, sellerId, slug, isRecommended, showOnHome, imageUrl: bodyImageUrl } = req.body;
+    
+    // Якщо файл завантажено в Cloudinary, беремо шлях звідти (req.file.path). 
+    // Інакше беремо текстове посилання, якщо воно є.
+    const finalImageUrl = req.file ? req.file.path : (bodyImageUrl || null);
 
     const newProduct = await prisma.product.create({
       data: {
@@ -60,7 +74,7 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
         slug: slug || `${Date.now()}`,
         description,
         price: parseFloat(price),
-        imageUrl: imageUrl, 
+        imageUrl: finalImageUrl, 
         categoryId: parseInt(categoryId),
         sellerId: parseInt(sellerId),
         showOnHome: showOnHome === 'true',      // Для популярних
@@ -83,8 +97,10 @@ app.put('/api/products/:id', upload.single('image'), async (req, res) => {
     if (!existingProduct) return res.status(404).json({ error: "Товар не знайдено" });
 
     let finalImageUrl = existingProduct.imageUrl;
+    
+    // Якщо завантажили нове фото, оновлюємо на Cloudinary URL
     if (req.file) {
-      finalImageUrl = `/uploads/${req.file.filename}`; 
+      finalImageUrl = req.file.path; 
     } else if (bodyImageUrl !== undefined) {
       finalImageUrl = bodyImageUrl; 
     }
@@ -132,7 +148,9 @@ app.get('/api/sellers', async (req, res) => {
 app.post('/api/sellers', upload.single('logo'), async (req, res) => {
   try {
     const { name, description, phone, telegram, slug, logoUrl: bodyLogoUrl } = req.body;
-    const finalLogoUrl = req.file ? `/uploads/${req.file.filename}` : (bodyLogoUrl || null);
+    
+    // Якщо файл завантажено в Cloudinary, беремо шлях звідти.
+    const finalLogoUrl = req.file ? req.file.path : (bodyLogoUrl || null);
 
     const newSeller = await prisma.seller.create({
       data: {
@@ -197,7 +215,7 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущено на http://localhost:${PORT}`);
 });
