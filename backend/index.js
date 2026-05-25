@@ -9,7 +9,6 @@ import fs from 'fs';
 const app = express();
 const prisma = new PrismaClient();
 
-// Налаштування CORS
 app.use(cors({
   origin: [
     "https://naidiukvadim.github.io", 
@@ -21,15 +20,10 @@ app.use(cors({
 
 app.use(express.json());
 
-// ==========================================
-// НАЛАШТУВАННЯ ЗАВАНТАЖЕННЯ ФОТО (MULTER)
-// ==========================================
-
 const uploadDir = './uploads';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
-
 app.use('/uploads', express.static('uploads'));
 
 const storage = multer.diskStorage({
@@ -41,15 +35,9 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + path.extname(file.originalname)); 
   }
 });
-
 const upload = multer({ storage: storage });
 
-// ==========================================
-// API МАРШРУТИ
-// ==========================================
-
 // --- ТОВАРИ ---
-// Отримати всі товари
 app.get('/api/products', async (req, res) => {
   try {
     const products = await prisma.product.findMany({
@@ -61,10 +49,9 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// Створити новий товар
 app.post('/api/products', upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, categoryId, sellerId, slug, isRecommended } = req.body;
+    const { name, description, price, categoryId, sellerId, slug, isRecommended, showOnHome } = req.body;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
     const newProduct = await prisma.product.create({
@@ -76,7 +63,8 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
         imageUrl: imageUrl, 
         categoryId: parseInt(categoryId),
         sellerId: parseInt(sellerId),
-        showOnHome: isRecommended === 'true', // Зберігаємо статус "На головній" у базу
+        showOnHome: showOnHome === 'true',      // Для популярних
+        isPromoted: isRecommended === 'true',   // Для рекомендованих
       },
       include: { seller: true, category: true }
     });
@@ -86,41 +74,41 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
   }
 });
 
-// Оновити існуючий товар (РЕДАГУВАННЯ)
 app.put('/api/products/:id', upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, categoryId, sellerId, isRecommended, imageUrl: bodyImageUrl } = req.body;
+    const { name, description, price, categoryId, sellerId, isRecommended, showOnHome, imageUrl: bodyImageUrl } = req.body;
 
-    // Шукаємо існуючий товар, щоб не стерти стару картинку, якщо нову не завантажили
     const existingProduct = await prisma.product.findUnique({ where: { id: parseInt(id) } });
     if (!existingProduct) return res.status(404).json({ error: "Товар не знайдено" });
 
-    // Логіка оновлення картинки
     let finalImageUrl = existingProduct.imageUrl;
     if (req.file) {
-      finalImageUrl = `/uploads/${req.file.filename}`; // Якщо завантажили новий файл
+      finalImageUrl = `/uploads/${req.file.filename}`; 
     } else if (bodyImageUrl !== undefined) {
-      finalImageUrl = bodyImageUrl; // Якщо вставили URL посилання
+      finalImageUrl = bodyImageUrl; 
     }
 
-    // Перевіряємо статус чекбокса (чи є він у запиті)
-    let showOnHome = existingProduct.showOnHome;
+    const updateData = {
+      name: name || existingProduct.name,
+      description: description || existingProduct.description,
+      price: price ? parseFloat(price) : existingProduct.price,
+      categoryId: categoryId ? parseInt(categoryId) : existingProduct.categoryId,
+      sellerId: sellerId ? parseInt(sellerId) : existingProduct.sellerId,
+      imageUrl: finalImageUrl,
+    };
+
+    // Розділяємо два статуси:
+    if (showOnHome !== undefined) {
+      updateData.showOnHome = showOnHome === 'true'; // На головній (популярні)
+    }
     if (isRecommended !== undefined) {
-      showOnHome = isRecommended === 'true';
+      updateData.isPromoted = isRecommended === 'true'; // Рекомендовані
     }
 
     const updatedProduct = await prisma.product.update({
       where: { id: parseInt(id) },
-      data: {
-        name: name || existingProduct.name,
-        description: description || existingProduct.description,
-        price: price ? parseFloat(price) : existingProduct.price,
-        categoryId: categoryId ? parseInt(categoryId) : existingProduct.categoryId,
-        sellerId: sellerId ? parseInt(sellerId) : existingProduct.sellerId,
-        imageUrl: finalImageUrl,
-        showOnHome: showOnHome
-      },
+      data: updateData,
       include: { seller: true, category: true }
     });
 

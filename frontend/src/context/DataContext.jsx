@@ -3,7 +3,6 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const BACKEND_URL = 'https://vamcraft-draft-git.onrender.com';
 
-// ── Утиліта: перетворює відносний шлях картинки у повний URL ──
 export const normalizeImageUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
@@ -12,7 +11,6 @@ export const normalizeImageUrl = (url) => {
   return `${BACKEND_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
-// ── Нормалізуємо товар ──
 const normalizeProduct = (p) => ({
   ...p,
   owner:    p.owner || p.seller?.name || 'Невідомий майстер',
@@ -23,10 +21,11 @@ const normalizeProduct = (p) => ({
   slug:     p.slug || String(p.id),
   inStock:  p.inStock ?? p.in_stock ?? true,
   salesCount: p.salesCount ?? p.sales_count ?? 0,
-  isRecommended: p.isRecommended ?? p.is_recommended ?? false,
+  // РОЗДІЛЯЄМО ЛОГІКУ:
+  isRecommended: p.isPromoted ?? p.is_promoted ?? false, // Це для Рекомендованих
+  showOnHome: p.showOnHome ?? p.show_on_home ?? false,   // Це для На Головній
 });
 
-// ── Нормалізуємо продавця ──
 const normalizeSeller = (s) => ({
   ...s,
   id:      String(s.id),
@@ -52,7 +51,7 @@ const DataContext = createContext();
 export const DataProvider = ({ children }) => {
   const [products,  setProducts]  = useState([]);
   const [sellers,   setSellers]   = useState([]);
-  const [orders,    setOrders]    = useState([]); // ПОВНІСТЮ ОЧИСТИЛИ ВІД LOCAL STORAGE
+  const [orders,    setOrders]    = useState([]); 
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
@@ -66,15 +65,13 @@ export const DataProvider = ({ children }) => {
     catch { return initialBanners; }
   });
 
-  // ── Завантаження з бекенду (БЕЗ КЕШУ) ──
   useEffect(() => {
     const fetchAll = async () => {
       setIsLoading(true);
       setFetchError(null);
       try {
-        const fetchOptions = { cache: 'no-store' }; // Забороняємо браузерам кешувати дані!
+        const fetchOptions = { cache: 'no-store' }; 
 
-        // Завантажуємо ОДНОЧАСНО товари, продавців і ЗАМОВЛЕННЯ
         const [resP, resS, resO] = await Promise.all([
           fetch(`${BACKEND_URL}/api/products`, fetchOptions),
           fetch(`${BACKEND_URL}/api/sellers`, fetchOptions),
@@ -91,7 +88,6 @@ export const DataProvider = ({ children }) => {
           resO.json(),
         ]);
 
-        // Зберігаємо справжні дані в стан React
         setProducts((Array.isArray(rawProducts) ? rawProducts : rawProducts.data ?? []).map(normalizeProduct));
         setSellers((Array.isArray(rawSellers)   ? rawSellers   : rawSellers.data   ?? []).map(normalizeSeller));
         setOrders(Array.isArray(rawOrders) ? rawOrders : []); 
@@ -106,10 +102,8 @@ export const DataProvider = ({ children }) => {
     fetchAll();
   }, []);
 
-  // Банери залишаємо в localStorage (поки для них немає бекенду)
   useEffect(() => { localStorage.setItem('app_banners', JSON.stringify(banners)); }, [banners]);
 
-  // ── Продавці ──
   const addSeller = (s) => {
     const slug = generateSlug(s.name);
     setSellers(prev => [...prev, normalizeSeller({ ...s, id: `seller_${Date.now()}`, slug })]);
@@ -121,7 +115,6 @@ export const DataProvider = ({ children }) => {
     setProducts(prev => prev.filter(p => p.sellerId !== String(id)));
   };
 
-  // ── Товари ──
   const addProduct = (p) => {
     const slug = `${generateSlug(p.name)}-${Date.now().toString().slice(-4)}`;
     setProducts(prev => [...prev, normalizeProduct({ ...p, id: `prod_${Date.now()}`, slug, salesCount: 0, inStock: true })]);
@@ -131,20 +124,14 @@ export const DataProvider = ({ children }) => {
   const deleteProduct = (id) =>
     setProducts(prev => prev.filter(p => p.id !== String(id)));
 
-  // ── Замовлення ──
   const addOrder = (orderFromServer) => {
-    // Тепер ми просто додаємо готове замовлення, яке прилетіло з бекенду (з Cart.jsx)
     setOrders(prev => [orderFromServer, ...prev]);
   };
   
   const updateOrderStatus = (id, status) => {
-    // Оновлюємо статус в інтерфейсі (адмінці)
     setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, status } : o));
-    
-    // Щоб статус зберігався в базі, пізніше сюди треба буде дописати fetch PUT запит до бекенду
   };
 
-  // ── Банери ──
   const updateBanners = (b) => setBanners(b);
 
   return (
