@@ -89,10 +89,38 @@ function Admin() {
     reader.readAsDataURL(file);
   };
 
+  // ── Товари ──
   const handleEditProduct = (p) => {
     setProductData({ ...p, imageFile: null });
     setEditingProductId(p.id);
     setProductView("create");
+  };
+
+  // Функція для миттєвого збереження чекбоксу з таблиці в базу даних
+  const handleToggleRecommended = async (product) => {
+    const newStatus = !product.isRecommended;
+
+    // Оптимістично оновлюємо UI (щоб користувач одразу побачив зміну)
+    updateProduct(product.id, { isRecommended: newStatus });
+
+    const formData = new FormData();
+    formData.append("isRecommended", newStatus);
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/products/${product.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Не вдалося зберегти статус на сервері");
+      }
+    } catch (err) {
+      console.error(err);
+      // Якщо сталась помилка (наприклад, зник інтернет), повертаємо галочку назад
+      updateProduct(product.id, { isRecommended: !newStatus });
+      alert("Помилка при оновленні статусу. Перевірте з'єднання.");
+    }
   };
 
   const handleProductSubmit = async (e) => {
@@ -104,6 +132,7 @@ function Admin() {
     formData.append("description", productData.description);
     formData.append("categoryId",  productData.categoryId);
     formData.append("sellerId",    productData.sellerId);
+    formData.append("isRecommended", productData.isRecommended); // Передаємо статус "На головній"
 
     if (productData.imageFile) {
       formData.append("image", productData.imageFile);
@@ -113,15 +142,28 @@ function Admin() {
 
     try {
       if (editingProductId) {
-        updateProduct(editingProductId, {
-          ...productData,
+        // --- РЕДАГУВАННЯ ТОВАРУ (PUT ЗАПИТ) ---
+        const res = await fetch(`${BACKEND_URL}/api/products/${editingProductId}`, {
+          method: "PUT",
+          body: formData,
         });
-        alert("Товар оновлено локально!");
+
+        if (res.ok) {
+          const updatedItem = await res.json();
+          updateProduct(editingProductId, updatedItem); // Оновлюємо стейт
+          alert("Товар успішно оновлено в базі даних!");
+        } else {
+          const err = await res.text();
+          alert(`Помилка сервера: ${err}`);
+          return;
+        }
       } else {
+        // --- СТВОРЕННЯ НОВОГО ТОВАРУ (POST ЗАПИТ) ---
         const res = await fetch(`${BACKEND_URL}/api/products`, {
           method: "POST",
           body: formData,
         });
+
         if (res.ok) {
           const saved = await res.json();
           addProduct(saved);
@@ -145,6 +187,7 @@ function Admin() {
     if (window.confirm("Видалити товар?")) deleteProduct(id);
   };
 
+  // ── Продавці ──
   const handleEditSeller = (s) => {
     setSellerData({ ...s, logoFile: null });
     setEditingSellerId(s.id);
@@ -160,7 +203,6 @@ function Admin() {
     formData.append("phone", sellerData.phone);
     formData.append("telegram", sellerData.telegram);
 
-    // ВАЖЛИВО: додаємо файл або URL
     if (sellerData.logoFile) {
       formData.append("logo", sellerData.logoFile);
     } else if (sellerData.logoUrl && !sellerData.logoUrl.startsWith("blob:")) {
@@ -280,7 +322,14 @@ function Admin() {
                       <td data-label="Назва">{p.name}</td>
                       <td data-label="Майстерня"><strong>{p.owner || (p.seller && p.seller.name)}</strong></td>
                       <td data-label="Ціна">{p.price} ₴</td>
-                      <td data-label="На гол."><input type="checkbox" checked={p.isRecommended || false} readOnly/></td>
+                      <td data-label="На гол.">
+                        {/* ТУТ ПРИБРАНО readOnly ТА ДОДАНО onChange ДЛЯ ЗБЕРЕЖЕННЯ В БД */}
+                        <input 
+                          type="checkbox" 
+                          checked={p.isRecommended || false} 
+                          onChange={() => handleToggleRecommended(p)}
+                        />
+                      </td>
                       <td data-label="Дії" className="actions-cell">
                         <button onClick={() => handleEditProduct(p)} className="btn-edit">Ред.</button>
                         <button onClick={() => handleDeleteProduct(p.id)} className="btn-disable">Видал.</button>

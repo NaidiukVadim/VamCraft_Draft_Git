@@ -49,6 +49,7 @@ const upload = multer({ storage: storage });
 // ==========================================
 
 // --- ТОВАРИ ---
+// Отримати всі товари
 app.get('/api/products', async (req, res) => {
   try {
     const products = await prisma.product.findMany({
@@ -60,9 +61,10 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
+// Створити новий товар
 app.post('/api/products', upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, categoryId, sellerId, slug } = req.body;
+    const { name, description, price, categoryId, sellerId, slug, isRecommended } = req.body;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
     const newProduct = await prisma.product.create({
@@ -74,12 +76,58 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
         imageUrl: imageUrl, 
         categoryId: parseInt(categoryId),
         sellerId: parseInt(sellerId),
+        showOnHome: isRecommended === 'true', // Зберігаємо статус "На головній" у базу
       },
       include: { seller: true, category: true }
     });
     res.json(newProduct);
   } catch (error) {
     res.status(500).json({ error: "Помилка при створенні товару" });
+  }
+});
+
+// Оновити існуючий товар (РЕДАГУВАННЯ)
+app.put('/api/products/:id', upload.single('image'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, categoryId, sellerId, isRecommended, imageUrl: bodyImageUrl } = req.body;
+
+    // Шукаємо існуючий товар, щоб не стерти стару картинку, якщо нову не завантажили
+    const existingProduct = await prisma.product.findUnique({ where: { id: parseInt(id) } });
+    if (!existingProduct) return res.status(404).json({ error: "Товар не знайдено" });
+
+    // Логіка оновлення картинки
+    let finalImageUrl = existingProduct.imageUrl;
+    if (req.file) {
+      finalImageUrl = `/uploads/${req.file.filename}`; // Якщо завантажили новий файл
+    } else if (bodyImageUrl !== undefined) {
+      finalImageUrl = bodyImageUrl; // Якщо вставили URL посилання
+    }
+
+    // Перевіряємо статус чекбокса (чи є він у запиті)
+    let showOnHome = existingProduct.showOnHome;
+    if (isRecommended !== undefined) {
+      showOnHome = isRecommended === 'true';
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: parseInt(id) },
+      data: {
+        name: name || existingProduct.name,
+        description: description || existingProduct.description,
+        price: price ? parseFloat(price) : existingProduct.price,
+        categoryId: categoryId ? parseInt(categoryId) : existingProduct.categoryId,
+        sellerId: sellerId ? parseInt(sellerId) : existingProduct.sellerId,
+        imageUrl: finalImageUrl,
+        showOnHome: showOnHome
+      },
+      include: { seller: true, category: true }
+    });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error("Помилка оновлення:", error);
+    res.status(500).json({ error: "Помилка при оновленні товару" });
   }
 });
 
@@ -95,10 +143,7 @@ app.get('/api/sellers', async (req, res) => {
 
 app.post('/api/sellers', upload.single('logo'), async (req, res) => {
   try {
-    // Дістаємо logoUrl з текстових полів форми (на випадок, якщо це посилання з інтернету)
     const { name, description, phone, telegram, slug, logoUrl: bodyLogoUrl } = req.body;
-    
-    // ВАЖЛИВО: Перевіряємо, що саме прийшло. Файл - в пріоритеті, інакше - текстове посилання.
     const finalLogoUrl = req.file ? `/uploads/${req.file.filename}` : (bodyLogoUrl || null);
 
     const newSeller = await prisma.seller.create({
@@ -108,7 +153,7 @@ app.post('/api/sellers', upload.single('logo'), async (req, res) => {
         description,
         phone,
         telegram,
-        logoUrl: finalLogoUrl, // Тепер тут збережеться URL, якщо ти його ввів
+        logoUrl: finalLogoUrl,
         isActive: true,
       }
     });
