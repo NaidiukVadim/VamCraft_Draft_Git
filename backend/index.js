@@ -75,7 +75,7 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
         sellerId: parseInt(sellerId),
         showOnHome: showOnHome === 'true',      
         isPromoted: isRecommended === 'true',   
-        inStock: inStock !== 'false', // За замовчуванням true, якщо не передано 'false'
+        inStock: inStock !== 'false', 
       },
       include: { seller: true, category: true }
     });
@@ -85,6 +85,31 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
   }
 });
 
+// ШВИДКИЙ МАРШРУТ ДЛЯ ОНОВЛЕННЯ СТАТУСІВ (БЕЗ ФОТО, ПРАЦЮЄ ЧЕРЕЗ JSON)
+app.put('/api/products/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { showOnHome, isPromoted, inStock } = req.body;
+
+    const updateData = {};
+    if (showOnHome !== undefined) updateData.showOnHome = showOnHome;
+    if (isPromoted !== undefined) updateData.isPromoted = isPromoted;
+    if (inStock !== undefined) updateData.inStock = inStock;
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+      include: { seller: true, category: true }
+    });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error("Помилка оновлення статусу:", error);
+    res.status(500).json({ error: "Помилка при оновленні статусу товару" });
+  }
+});
+
+// ПОВНЕ РЕДАГУВАННЯ ТОВАРУ З ФОТО (ЧЕРЕЗ ФОРМУ)
 app.put('/api/products/:id', upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -160,7 +185,6 @@ app.post('/api/sellers', upload.single('logo'), async (req, res) => {
   }
 });
 
-// ОНОВЛЕННЯ ПРОДАВЦЯ (РЕДАГУВАННЯ)
 app.put('/api/sellers/:id', upload.single('logo'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -240,7 +264,6 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// ОНОВЛЕННЯ СТАТУСУ ЗАМОВЛЕННЯ
 app.put('/api/orders/:id', async (req, res) => {
   try {
     const { id } = req.params;

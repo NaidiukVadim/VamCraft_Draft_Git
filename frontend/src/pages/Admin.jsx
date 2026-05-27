@@ -95,19 +95,25 @@ function Admin() {
     setProductView("create");
   };
 
+  // ОНОВЛЕНА ФУНКЦІЯ: Тепер вона відправляє чистий JSON на новий маршрут
   const handleToggleShowOnHome = async (product) => {
     const newStatus = !product.showOnHome;
+    
+    // Візуально змінюємо одразу
     updateProduct(product.id, { showOnHome: newStatus });
-    const formData = new FormData();
-    formData.append("showOnHome", newStatus);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/products/${product.id}`, {
+      const res = await fetch(`${BACKEND_URL}/api/products/${product.id}/status`, {
         method: "PUT",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ showOnHome: newStatus }),
       });
+      
       if (!res.ok) throw new Error("Не вдалося зберегти статус на сервері");
     } catch (err) {
+      // Відкат якщо сталась помилка
       updateProduct(product.id, { showOnHome: !newStatus });
       alert("Помилка при оновленні статусу.");
     }
@@ -123,7 +129,7 @@ function Admin() {
     formData.append("sellerId",    productData.sellerId);
     formData.append("isRecommended", productData.isRecommended); 
     formData.append("showOnHome", productData.showOnHome);
-    formData.append("inStock", productData.inStock); // Додано в наявності
+    formData.append("inStock", productData.inStock); 
 
     if (productData.imageFile) {
       formData.append("image", productData.imageFile);
@@ -189,7 +195,6 @@ function Admin() {
 
     try {
       if (editingSellerId) {
-        // ДОДАНО ВІДПРАВКУ ОНОВЛЕННЯ ПРОДАВЦЯ В БАЗУ ДАНИХ
         const res = await fetch(`${BACKEND_URL}/api/sellers/${editingSellerId}`, {
           method: "PUT",
           body: formData,
