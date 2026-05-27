@@ -21,9 +21,8 @@ const normalizeProduct = (p) => ({
   slug:     p.slug || String(p.id),
   inStock:  p.inStock ?? p.in_stock ?? true,
   salesCount: p.salesCount ?? p.sales_count ?? 0,
-  // РОЗДІЛЯЄМО ЛОГІКУ:
-  isRecommended: p.isPromoted ?? p.is_promoted ?? false, // Це для Рекомендованих
-  showOnHome: p.showOnHome ?? p.show_on_home ?? false,   // Це для На Головній
+  isRecommended: p.isPromoted ?? p.is_promoted ?? false, 
+  showOnHome: p.showOnHome ?? p.show_on_home ?? false,   
 });
 
 const normalizeSeller = (s) => ({
@@ -128,8 +127,25 @@ export const DataProvider = ({ children }) => {
     setOrders(prev => [orderFromServer, ...prev]);
   };
   
-  const updateOrderStatus = (id, status) => {
-    setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, status } : o));
+  // ДОДАНО ВІДПРАВКУ СТАТУСУ ЗАМОВЛЕННЯ НА БЕКЕНД
+  const updateOrderStatus = async (id, status) => {
+    try {
+      // Спочатку оптимістично оновлюємо UI
+      setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, status } : o));
+      
+      const res = await fetch(`${BACKEND_URL}/api/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+
+      if (!res.ok) {
+        throw new Error("Помилка збереження статусу");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Не вдалося зберегти статус замовлення в базу даних.");
+    }
   };
 
   const updateBanners = (b) => setBanners(b);

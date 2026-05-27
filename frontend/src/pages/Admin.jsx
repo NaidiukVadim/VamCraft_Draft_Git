@@ -26,7 +26,7 @@ function Admin() {
 
   const initialProductState = {
     name: "", price: "", categoryId: "1", sellerId: "",
-    description: "", isRecommended: false, showOnHome: false, imageUrl: "", imageFile: null,
+    description: "", isRecommended: false, showOnHome: false, inStock: true, imageUrl: "", imageFile: null,
   };
 
   const initialSellerState = {
@@ -95,12 +95,9 @@ function Admin() {
     setProductView("create");
   };
 
-  // ФУНКЦІЯ ДЛЯ ТАБЛИЦІ (Тільки showOnHome)
   const handleToggleShowOnHome = async (product) => {
     const newStatus = !product.showOnHome;
-
     updateProduct(product.id, { showOnHome: newStatus });
-
     const formData = new FormData();
     formData.append("showOnHome", newStatus);
 
@@ -109,30 +106,24 @@ function Admin() {
         method: "PUT",
         body: formData,
       });
-
-      if (!res.ok) {
-        throw new Error("Не вдалося зберегти статус на сервері");
-      }
+      if (!res.ok) throw new Error("Не вдалося зберегти статус на сервері");
     } catch (err) {
-      console.error(err);
       updateProduct(product.id, { showOnHome: !newStatus });
-      alert("Помилка при оновленні статусу. Перевірте з'єднання.");
+      alert("Помилка при оновленні статусу.");
     }
   };
 
   const handleProductSubmit = async (e) => {
     e.preventDefault();
-
     const formData = new FormData();
     formData.append("name",        productData.name);
     formData.append("price",       productData.price);
     formData.append("description", productData.description);
     formData.append("categoryId",  productData.categoryId);
     formData.append("sellerId",    productData.sellerId);
-    
-    // ФОРМА РЕДАГУВАННЯ відправляє обидва статуси:
-    formData.append("isRecommended", productData.isRecommended); // Рекомендовані
-    formData.append("showOnHome", productData.showOnHome);       // На головній
+    formData.append("isRecommended", productData.isRecommended); 
+    formData.append("showOnHome", productData.showOnHome);
+    formData.append("inStock", productData.inStock); // Додано в наявності
 
     if (productData.imageFile) {
       formData.append("image", productData.imageFile);
@@ -151,10 +142,6 @@ function Admin() {
           const updatedItem = await res.json();
           updateProduct(editingProductId, updatedItem);
           alert("Товар успішно оновлено в базі даних!");
-        } else {
-          const err = await res.text();
-          alert(`Помилка сервера: ${err}`);
-          return;
         }
       } else {
         const res = await fetch(`${BACKEND_URL}/api/products`, {
@@ -166,17 +153,12 @@ function Admin() {
           const saved = await res.json();
           addProduct(saved);
           alert("Товар успішно збережено на сервері!");
-        } else {
-          const err = await res.text();
-          alert(`Помилка сервера: ${err}`);
-          return;
         }
       }
       setProductData(initialProductState);
       setEditingProductId(null);
       setProductView("list");
     } catch (err) {
-      console.error(err);
       alert("Не вдалося з'єднатися з сервером.");
     }
   };
@@ -193,7 +175,6 @@ function Admin() {
 
   const handleSellerSubmit = async (e) => {
     e.preventDefault();
-
     const formData = new FormData();
     formData.append("name", sellerData.name);
     formData.append("description", sellerData.description);
@@ -208,12 +189,20 @@ function Admin() {
 
     try {
       if (editingSellerId) {
-        updateSeller(editingSellerId, sellerData);
-        alert("Дані продавця оновлено локально!");
-        products.forEach(p => {
-          if (String(p.sellerId) === String(editingSellerId))
-            updateProduct(p.id, { owner: sellerData.name });
+        // ДОДАНО ВІДПРАВКУ ОНОВЛЕННЯ ПРОДАВЦЯ В БАЗУ ДАНИХ
+        const res = await fetch(`${BACKEND_URL}/api/sellers/${editingSellerId}`, {
+          method: "PUT",
+          body: formData,
         });
+
+        if (res.ok) {
+          const updatedSeller = await res.json();
+          updateSeller(editingSellerId, updatedSeller);
+          alert("Дані продавця успішно оновлено в базі даних!");
+          products.forEach(p => {
+            if (String(p.sellerId) === String(editingSellerId)) updateProduct(p.id, { owner: updatedSeller.name });
+          });
+        }
       } else {
         const res = await fetch(`${BACKEND_URL}/api/sellers`, {
           method: "POST",
@@ -224,17 +213,12 @@ function Admin() {
           const savedSeller = await res.json();
           addSeller(savedSeller); 
           alert("Продавця успішно додано в базу даних!");
-        } else {
-          const err = await res.text();
-          alert(`Помилка сервера: ${err}`);
-          return;
         }
       }
       setSellerData(initialSellerState);
       setEditingSellerId(null);
       setSellerView("list");
     } catch (err) {
-      console.error(err);
       alert("Не вдалося з'єднатися з сервером.");
     }
   };
@@ -320,7 +304,6 @@ function Admin() {
                       <td data-label="Майстерня"><strong>{p.owner || (p.seller && p.seller.name)}</strong></td>
                       <td data-label="Ціна">{p.price} ₴</td>
                       <td data-label="На гол.">
-                        {/* ТУТ ТЕПЕР SHOW ON HOME */}
                         <input 
                           type="checkbox" 
                           checked={p.showOnHome || false} 
@@ -352,12 +335,16 @@ function Admin() {
                     {sellers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
-                <div className="form-group checkbox-group">
-                  {/* ТУТ ТЕПЕР IS RECOMMENDED */}
+                <div className="form-group checkbox-group" style={{ display: 'flex', gap: '20px' }}>
                   <label>
                     <input type="checkbox" checked={productData.isRecommended}
                       onChange={e => setProductData({...productData, isRecommended: e.target.checked})}/>
-                    Показувати в "Рекомендованих"
+                    В "Рекомендованих"
+                  </label>
+                  <label>
+                    <input type="checkbox" checked={productData.inStock}
+                      onChange={e => setProductData({...productData, inStock: e.target.checked})}/>
+                    В наявності (Можна купити)
                   </label>
                 </div>
                 <div className="form-group"><label>Опис:</label>

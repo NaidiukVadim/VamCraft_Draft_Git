@@ -243,3 +243,35 @@
     font-size: 15px;
   }
 }
+
+
+/* Стиль для кнопки кошика, коли вона вимкнена */
+.add-to-cart-btn:disabled, 
+.add-to-cart-btn-text:disabled {
+  background-color: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+/* Напис "Немає в наявності" поверх фото */
+.image-placeholder {
+  position: relative;
+}
+
+.out-of-stock-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* Робимо саму картку трохи блідішою, якщо товару немає */
+.out-of-stock-card {
+  opacity: 0.85;
+}

@@ -11,15 +11,21 @@ function ProductCard({ product, isRecommendedStyle }) {
 
   const handleAddToCart = (e) => {
     e.preventDefault();
+    // Додаткова перевірка в функції на випадок, якщо хтось обійде disabled
+    if (!product.inStock) return; 
+    
     addToCart(product);
     alert(`Товар "${product.name}" додано в кошик!`);
   };
 
-  // Використовуємо slug якщо є, інакше id — для посилання на деталі
   const productLink = `/product/${product.slug || product.id}`;
 
+  const shortDescription = product.description 
+    ? product.description.split('.')[0] 
+    : `Куплено ${product.salesCount || 0} разів`;
+
   return (
-    <div className={`product-card ${isRecommendedStyle ? 'recommended-card' : ''}`}>
+    <div className={`product-card ${isRecommendedStyle ? 'recommended-card' : ''} ${!product.inStock ? 'out-of-stock-card' : ''}`}>
 
       <Link to={productLink} className="product-card-link" style={{ textDecoration: 'none', color: 'inherit' }}>
         <div className="image-placeholder">
@@ -28,13 +34,17 @@ function ProductCard({ product, isRecommendedStyle }) {
             alt={product.name}
             onError={(e) => { e.target.src = IMG_PLACEHOLDER; }}
           />
+          {/* Візуальна плашка "Немає в наявності" поверх фото для кращого UX */}
+          {!product.inStock && (
+            <div className="out-of-stock-badge">Немає в наявності</div>
+          )}
         </div>
 
         <div className="product-info">
           <p className="product-owner">{product.owner}</p>
           <h3 className="product-title">{product.name}</h3>
           {isRecommendedStyle && (
-            <p className="product-full-description">{product.description}</p>
+            <p className="product-full-description">{shortDescription}</p>
           )}
         </div>
       </Link>
@@ -51,12 +61,22 @@ function ProductCard({ product, isRecommendedStyle }) {
             </symbol>
           </svg>
 
+          {/* ДОДАНО disabled={!product.inStock} НА ОБИДВІ КНОПКИ */}
           {isRecommendedStyle ? (
-            <button className="add-to-cart-btn-text" onClick={handleAddToCart}>
-              Додати в кошик
+            <button 
+              className="add-to-cart-btn-text" 
+              disabled={!product.inStock} 
+              onClick={handleAddToCart}
+            >
+              {product.inStock ? 'Додати в кошик' : 'Немає'}
             </button>
           ) : (
-            <button className="add-to-cart-btn" title="Додати в кошик" onClick={handleAddToCart}>
+            <button 
+              className="add-to-cart-btn" 
+              title={product.inStock ? "Додати в кошик" : "Товару немає в наявності"} 
+              disabled={!product.inStock} 
+              onClick={handleAddToCart}
+            >
               <svg className="cart-icon">
                 <use xlinkHref="#cart-icon" />
               </svg>
@@ -74,7 +94,7 @@ function ProductCard({ product, isRecommendedStyle }) {
             <svg className="fire-icon">
               <use xlinkHref="#fire-icon" />
             </svg>
-            <p className="product-description">{product.description}</p>
+            <p className="product-description">{shortDescription}</p>
           </div>
         )}
       </div>

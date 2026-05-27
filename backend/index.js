@@ -1,5 +1,5 @@
 // backend/index.js
-import 'dotenv/config'; // Це дозволить Node.js прочитати файл .env
+import 'dotenv/config'; 
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import express from 'express';
@@ -25,19 +25,17 @@ app.use(express.json());
 // НАЛАШТУВАННЯ CLOUDINARY ТА MULTER
 // ==========================================
 
-// 1. Конфігурація Cloudinary з файлу .env
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// 2. Налаштування сховища для прямого завантаження у хмару
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'vamcraft', // Папка, яка створиться в твоєму Cloudinary
-    format: async (req, file) => 'png', // Формат збереження
+    folder: 'vamcraft', 
+    format: async (req, file) => 'png', 
     public_id: (req, file) => `${Date.now()}-${file.originalname.split('.')[0]}`,
   },
 });
@@ -62,10 +60,8 @@ app.get('/api/products', async (req, res) => {
 
 app.post('/api/products', upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, categoryId, sellerId, slug, isRecommended, showOnHome, imageUrl: bodyImageUrl } = req.body;
+    const { name, description, price, categoryId, sellerId, slug, isRecommended, showOnHome, inStock, imageUrl: bodyImageUrl } = req.body;
     
-    // Якщо файл завантажено в Cloudinary, беремо шлях звідти (req.file.path). 
-    // Інакше беремо текстове посилання, якщо воно є.
     const finalImageUrl = req.file ? req.file.path : (bodyImageUrl || null);
 
     const newProduct = await prisma.product.create({
@@ -77,8 +73,9 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
         imageUrl: finalImageUrl, 
         categoryId: parseInt(categoryId),
         sellerId: parseInt(sellerId),
-        showOnHome: showOnHome === 'true',      // Для популярних
-        isPromoted: isRecommended === 'true',   // Для рекомендованих
+        showOnHome: showOnHome === 'true',      
+        isPromoted: isRecommended === 'true',   
+        inStock: inStock !== 'false', // За замовчуванням true, якщо не передано 'false'
       },
       include: { seller: true, category: true }
     });
@@ -91,14 +88,13 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
 app.put('/api/products/:id', upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, categoryId, sellerId, isRecommended, showOnHome, imageUrl: bodyImageUrl } = req.body;
+    const { name, description, price, categoryId, sellerId, isRecommended, showOnHome, inStock, imageUrl: bodyImageUrl } = req.body;
 
     const existingProduct = await prisma.product.findUnique({ where: { id: parseInt(id) } });
     if (!existingProduct) return res.status(404).json({ error: "Товар не знайдено" });
 
     let finalImageUrl = existingProduct.imageUrl;
     
-    // Якщо завантажили нове фото, оновлюємо на Cloudinary URL
     if (req.file) {
       finalImageUrl = req.file.path; 
     } else if (bodyImageUrl !== undefined) {
@@ -114,13 +110,9 @@ app.put('/api/products/:id', upload.single('image'), async (req, res) => {
       imageUrl: finalImageUrl,
     };
 
-    // Розділяємо два статуси:
-    if (showOnHome !== undefined) {
-      updateData.showOnHome = showOnHome === 'true'; // На головній (популярні)
-    }
-    if (isRecommended !== undefined) {
-      updateData.isPromoted = isRecommended === 'true'; // Рекомендовані
-    }
+    if (showOnHome !== undefined) updateData.showOnHome = showOnHome === 'true';
+    if (isRecommended !== undefined) updateData.isPromoted = isRecommended === 'true';
+    if (inStock !== undefined) updateData.inStock = inStock === 'true';
 
     const updatedProduct = await prisma.product.update({
       where: { id: parseInt(id) },
@@ -149,7 +141,6 @@ app.post('/api/sellers', upload.single('logo'), async (req, res) => {
   try {
     const { name, description, phone, telegram, slug, logoUrl: bodyLogoUrl } = req.body;
     
-    // Якщо файл завантажено в Cloudinary, беремо шлях звідти.
     const finalLogoUrl = req.file ? req.file.path : (bodyLogoUrl || null);
 
     const newSeller = await prisma.seller.create({
@@ -166,6 +157,40 @@ app.post('/api/sellers', upload.single('logo'), async (req, res) => {
     res.json(newSeller);
   } catch (error) {
     res.status(500).json({ error: "Помилка при створенні продавця" });
+  }
+});
+
+// ОНОВЛЕННЯ ПРОДАВЦЯ (РЕДАГУВАННЯ)
+app.put('/api/sellers/:id', upload.single('logo'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, phone, telegram, logoUrl: bodyLogoUrl } = req.body;
+
+    const existingSeller = await prisma.seller.findUnique({ where: { id: parseInt(id) } });
+    if (!existingSeller) return res.status(404).json({ error: "Продавця не знайдено" });
+
+    let finalLogoUrl = existingSeller.logoUrl;
+    if (req.file) {
+      finalLogoUrl = req.file.path;
+    } else if (bodyLogoUrl !== undefined) {
+      finalLogoUrl = bodyLogoUrl;
+    }
+
+    const updatedSeller = await prisma.seller.update({
+      where: { id: parseInt(id) },
+      data: {
+        name: name || existingSeller.name,
+        description: description || existingSeller.description,
+        phone: phone || existingSeller.phone,
+        telegram: telegram || existingSeller.telegram,
+        logoUrl: finalLogoUrl,
+      }
+    });
+
+    res.json(updatedSeller);
+  } catch (error) {
+    console.error("Помилка оновлення продавця:", error);
+    res.status(500).json({ error: "Помилка при оновленні продавця" });
   }
 });
 
@@ -212,6 +237,24 @@ app.post('/api/orders', async (req, res) => {
     res.json(newOrder);
   } catch (error) {
     res.status(500).json({ error: "Не вдалося зберегти замовлення" });
+  }
+});
+
+// ОНОВЛЕННЯ СТАТУСУ ЗАМОВЛЕННЯ
+app.put('/api/orders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const updatedOrder = await prisma.order.update({
+      where: { id: parseInt(id) },
+      data: { status }
+    });
+    
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error("Помилка оновлення замовлення:", error);
+    res.status(500).json({ error: "Не вдалося оновити статус" });
   }
 });
 
