@@ -21,6 +21,20 @@ app.use(cors({
 
 app.use(express.json());
 
+// === ФУНКЦІЯ ТРАНСЛІТЕРАЦІЇ (Для англійських посилань) ===
+const generateSlug = (text) => {
+  if (!text) return '';
+  const ukrToLat = {
+    'а':'a','б':'b','в':'v','г':'h','ґ':'g','д':'d','е':'e','є':'ye',
+    'ж':'zh','з':'z','и':'y','і':'i','ї':'yi','й':'y','к':'k','л':'l',
+    'м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u',
+    'ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ь':'','ю':'yu','я':'ya',' ':'-',
+  };
+  return text.toLowerCase()
+    .split('').map(c => ukrToLat[c] ?? c).join('')
+    .replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+};
+
 // ==========================================
 // НАЛАШТУВАННЯ CLOUDINARY ТА MULTER
 // ==========================================
@@ -67,7 +81,8 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
     const newProduct = await prisma.product.create({
       data: {
         name,
-        slug: slug || `${Date.now()}`,
+        // Використовуємо транслітерацію для нових товарів
+        slug: slug || `${generateSlug(name)}-${Date.now().toString().slice(-4)}`,
         description,
         price: parseFloat(price),
         imageUrl: finalImageUrl, 
@@ -85,7 +100,6 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
   }
 });
 
-// ШВИДКИЙ МАРШРУТ ДЛЯ ОНОВЛЕННЯ СТАТУСІВ (БЕЗ ФОТО, ПРАЦЮЄ ЧЕРЕЗ JSON)
 app.put('/api/products/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
@@ -109,7 +123,6 @@ app.put('/api/products/:id/status', async (req, res) => {
   }
 });
 
-// ПОВНЕ РЕДАГУВАННЯ ТОВАРУ З ФОТО (ЧЕРЕЗ ФОРМУ)
 app.put('/api/products/:id', upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -171,7 +184,7 @@ app.post('/api/sellers', upload.single('logo'), async (req, res) => {
     const newSeller = await prisma.seller.create({
       data: {
         name,
-        slug: slug || `seller-${Date.now()}`,
+        slug: slug || generateSlug(name) || `seller-${Date.now()}`,
         description,
         phone,
         telegram,
@@ -222,12 +235,20 @@ app.put('/api/sellers/:id', upload.single('logo'), async (req, res) => {
 app.get('/api/orders', async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
-      include: { orderItems: true },
+      include: { 
+        orderItems: {
+          include: { product: true } // Підтягуємо сам товар, щоб мати його ім'я
+        } 
+      },
       orderBy: { createdAt: 'desc' }
     });
     const formattedOrders = orders.map(order => ({
       ...order,
-      items: order.orderItems 
+      items: order.orderItems.map(item => ({
+        ...item,
+        // Якщо товар був видалений, показуємо заглушку, інакше — його реальне ім'я
+        name: item.product ? item.product.name : `Видалений товар (ID: ${item.productId})`
+      }))
     }));
     res.json(formattedOrders);
   } catch (error) {

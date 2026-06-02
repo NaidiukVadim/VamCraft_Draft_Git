@@ -99,6 +99,13 @@
   font-weight: 600; font-size: 14px; text-transform: uppercase;
 }
 
+.admin-table input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
 .admin-table tbody tr:hover { background-color: #fafafa; }
 
 .orders-table .expanded-row td { border-bottom: none; background-color: #f9f9f9; }
@@ -174,7 +181,7 @@
 }
 
 .order-item-detail:last-child { border-bottom: none; }
-.item-name { flex: 1; }
+.item-name { flex: 1; font-weight: 500; }
 .item-meta { color: #555; white-space: nowrap; }
 
 .order-comment {
@@ -264,10 +271,10 @@
 }
 
 /* =========================================
-   МОБІЛЬНИЙ (до 768px)
+   МОБІЛЬНИЙ ТА ПЛАНШЕТ (до 850px - включає iPad Air)
    Таблиця → картки, нуль горизонтального скролу
 ========================================= */
-@media (max-width: 768px) {
+@media (max-width: 850px) {
 
   /* Лейаут */
   .admin-page {
