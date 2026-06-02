@@ -6,15 +6,19 @@ import "./Admin.css";
 import heroImg     from "../assets/hero-img.svg?url";
 import heroDownImg from "../assets/hero-down-img.png";
 
-const BACKEND_URL = "https://vamcraft-draft-git.onrender.com";
-
 function Admin() {
   const {
     products, sellers, orders, banners,
     addProduct, updateProduct, deleteProduct,
     addSeller, updateSeller, deleteSeller,
     updateOrderStatus, updateBanners,
+    BACKEND_URL, authToken, login, logout, getAuthHeaders
   } = useData();
+
+  // === СТАН АВТОРИЗАЦІЇ ===
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
 
   const [activeTab,        setActiveTab]        = useState("products");
   const [productView,      setProductView]      = useState("list");
@@ -44,6 +48,51 @@ function Admin() {
   const [bannerData, setBannerData] = useState(defaultBanners);
 
   useEffect(() => { if (banners) setBannerData(banners); }, [banners]);
+
+  // === ЛОГІКА ВХОДУ ===
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError("");
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        login(data.token);
+      } else {
+        setLoginError(data.error || "Помилка входу");
+      }
+    } catch (err) {
+      setLoginError("Немає зв'язку з сервером.");
+    }
+  };
+
+  // Якщо користувач НЕ авторизований, показуємо екран входу
+  if (!authToken) {
+    return (
+      <div className="login-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <form onSubmit={handleLogin} className="admin-form" style={{ width: 400, padding: 30, background: 'white', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ textAlign: 'center', color: '#d8705c', marginBottom: 20 }}>Вхід в Адмін-панель</h2>
+          {loginError && <p style={{ color: 'red', textAlign: 'center', marginBottom: 15 }}>{loginError}</p>}
+          <div className="form-group">
+            <label>Email</label>
+            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Пароль</label>
+            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} />
+          </div>
+          <button type="submit" className="admin-submit-btn" style={{ width: '100%', marginTop: 20 }}>Увійти</button>
+        </form>
+      </div>
+    );
+  }
+
+  // === ОСНОВНИЙ КОД АДМІНКИ (Показується тільки якщо є authToken) ===
 
   const formatDate = (iso) => {
     if (!iso) return "Дата невідома";
@@ -95,25 +144,21 @@ function Admin() {
     setProductView("create");
   };
 
-  // ОНОВЛЕНА ФУНКЦІЯ: Тепер вона відправляє чистий JSON на новий маршрут
   const handleToggleShowOnHome = async (product) => {
     const newStatus = !product.showOnHome;
-    
-    // Візуально змінюємо одразу
     updateProduct(product.id, { showOnHome: newStatus });
-
+    
     try {
       const res = await fetch(`${BACKEND_URL}/api/products/${product.id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          ...getAuthHeaders() // Додаємо токен
         },
         body: JSON.stringify({ showOnHome: newStatus }),
       });
-      
       if (!res.ok) throw new Error("Не вдалося зберегти статус на сервері");
     } catch (err) {
-      // Відкат якщо сталась помилка
       updateProduct(product.id, { showOnHome: !newStatus });
       alert("Помилка при оновленні статусу.");
     }
@@ -141,6 +186,7 @@ function Admin() {
       if (editingProductId) {
         const res = await fetch(`${BACKEND_URL}/api/products/${editingProductId}`, {
           method: "PUT",
+          headers: getAuthHeaders(), // Додаємо токен
           body: formData,
         });
 
@@ -152,6 +198,7 @@ function Admin() {
       } else {
         const res = await fetch(`${BACKEND_URL}/api/products`, {
           method: "POST",
+          headers: getAuthHeaders(), // Додаємо токен
           body: formData,
         });
 
@@ -170,7 +217,7 @@ function Admin() {
   };
 
   const handleDeleteProduct = (id) => {
-    if (window.confirm("Видалити товар?")) deleteProduct(id);
+    if (window.confirm("Видалити товар?")) deleteProduct(id); // Запит на DELETE можна додати з getAuthHeaders()
   };
 
   const handleEditSeller = (s) => {
@@ -197,6 +244,7 @@ function Admin() {
       if (editingSellerId) {
         const res = await fetch(`${BACKEND_URL}/api/sellers/${editingSellerId}`, {
           method: "PUT",
+          headers: getAuthHeaders(),
           body: formData,
         });
 
@@ -211,6 +259,7 @@ function Admin() {
       } else {
         const res = await fetch(`${BACKEND_URL}/api/sellers`, {
           method: "POST",
+          headers: getAuthHeaders(),
           body: formData,
         });
 
@@ -238,7 +287,6 @@ function Admin() {
   const handleBannerSubmit = (e) => {
     e.preventDefault();
     if (updateBanners) { updateBanners(bannerData); alert("Банери успішно оновлено!"); }
-    else               { alert("Помилка: updateBanners не знайдено в DataContext."); }
   };
 
   const BackBtn = ({ onClick }) => (
@@ -279,6 +327,8 @@ function Admin() {
             {label}
           </button>
         ))}
+        {/* Кнопка виходу */}
+        <button onClick={logout} style={{ marginTop: 'auto', color: 'red' }}>Вийти</button>
       </div>
 
       <div className="admin-content">

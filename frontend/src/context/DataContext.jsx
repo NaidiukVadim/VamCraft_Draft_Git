@@ -54,6 +54,9 @@ export const DataProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
+  // АВТОРИЗАЦІЯ
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem('vamcraft_admin_token') || null);
+
   const initialBanners = {
     heroTop:    { title: 'Унікальні вироби ручної роботи', subtitle: 'Знайдіть ідеальний подарунок або прикрасу для себе', imageUrl: '' },
     heroBottom: { title: 'Речі, що мають душу',            subtitle: 'Відкрийте для себе крафтові майстерні України та оберіть унікальні вироби ручної роботи.', imageUrl: '' },
@@ -64,32 +67,37 @@ export const DataProvider = ({ children }) => {
     catch { return initialBanners; }
   });
 
+  // Функція для отримання заголовків з токеном
+  const getAuthHeaders = () => {
+    return authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
+  };
+
   useEffect(() => {
     const fetchAll = async () => {
       setIsLoading(true);
       setFetchError(null);
       try {
         const fetchOptions = { cache: 'no-store' }; 
+        const fetchAuthOptions = { cache: 'no-store', headers: getAuthHeaders() };
 
+        // Зверни увагу: якщо немає токена, orders може повернути помилку 401, це ок.
         const [resP, resS, resO] = await Promise.all([
           fetch(`${BACKEND_URL}/api/products`, fetchOptions),
           fetch(`${BACKEND_URL}/api/sellers`, fetchOptions),
-          fetch(`${BACKEND_URL}/api/orders`, fetchOptions), 
+          fetch(`${BACKEND_URL}/api/orders`, authToken ? fetchAuthOptions : { ...fetchOptions, method: 'GET' }).catch(() => ({ ok: false })), 
         ]);
 
         if (!resP.ok) throw new Error(`Products: ${resP.status}`);
         if (!resS.ok) throw new Error(`Sellers: ${resS.status}`);
-        if (!resO.ok) throw new Error(`Orders: ${resO.status}`);
 
-        const [rawProducts, rawSellers, rawOrders] = await Promise.all([
-          resP.json(),
-          resS.json(),
-          resO.json(),
-        ]);
-
+        const [rawProducts, rawSellers] = await Promise.all([resP.json(), resS.json()]);
         setProducts((Array.isArray(rawProducts) ? rawProducts : rawProducts.data ?? []).map(normalizeProduct));
         setSellers((Array.isArray(rawSellers)   ? rawSellers   : rawSellers.data   ?? []).map(normalizeSeller));
-        setOrders(Array.isArray(rawOrders) ? rawOrders : []); 
+        
+        if (resO && resO.ok) {
+           const rawOrders = await resO.json();
+           setOrders(Array.isArray(rawOrders) ? rawOrders : []); 
+        }
 
       } catch (err) {
         console.error('Помилка завантаження:', err);
@@ -99,9 +107,21 @@ export const DataProvider = ({ children }) => {
       }
     };
     fetchAll();
-  }, []);
+  }, [authToken]); // Перезавантажуємо при зміні токена
 
   useEffect(() => { localStorage.setItem('app_banners', JSON.stringify(banners)); }, [banners]);
+
+  // Збереження токена після успішного входу
+  const login = (token) => {
+    setAuthToken(token);
+    localStorage.setItem('vamcraft_admin_token', token);
+  };
+
+  const logout = () => {
+    setAuthToken(null);
+    localStorage.removeItem('vamcraft_admin_token');
+    setOrders([]); // Очищуємо замовлення при виході
+  };
 
   const addSeller = (s) => {
     const slug = generateSlug(s.name);
@@ -127,21 +147,17 @@ export const DataProvider = ({ children }) => {
     setOrders(prev => [orderFromServer, ...prev]);
   };
   
-  // ДОДАНО ВІДПРАВКУ СТАТУСУ ЗАМОВЛЕННЯ НА БЕКЕНД
   const updateOrderStatus = async (id, status) => {
     try {
-      // Спочатку оптимістично оновлюємо UI
       setOrders(prev => prev.map(o => String(o.id) === String(id) ? { ...o, status } : o));
       
       const res = await fetch(`${BACKEND_URL}/api/orders/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ status })
       });
 
-      if (!res.ok) {
-        throw new Error("Помилка збереження статусу");
-      }
+      if (!res.ok) throw new Error("Помилка збереження статусу");
     } catch (error) {
       console.error(error);
       alert("Не вдалося зберегти статус замовлення в базу даних.");
@@ -156,7 +172,8 @@ export const DataProvider = ({ children }) => {
       addSeller, updateSeller, deleteSeller,
       addProduct, updateProduct, deleteProduct,
       addOrder, updateOrderStatus, updateBanners,
-      BACKEND_URL, normalizeImageUrl,
+      BACKEND_URL, normalizeImageUrl, 
+      authToken, login, logout, getAuthHeaders
     }}>
       {children}
     </DataContext.Provider>

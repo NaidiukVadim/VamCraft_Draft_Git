@@ -6,6 +6,8 @@ import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -21,7 +23,23 @@ app.use(cors({
 
 app.use(express.json());
 
-// === ФУНКЦІЯ ТРАНСЛІТЕРАЦІЇ (Для англійських посилань) ===
+// Секретний ключ для підпису токенів. В ідеалі його треба додати у файл .env як JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET || "super_secret_vamcraft_key_2026";
+
+// === МІДЛВАР ДЛЯ ПЕРЕВІРКИ АВТОРИЗАЦІЇ ===
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Формат: "Bearer TOKEN_STRING"
+
+  if (!token) return res.status(401).json({ error: "Доступ заборонено. Потрібна авторизація." });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: "Токен недійсний або його час дії вийшов." });
+    req.user = user;
+    next();
+  });
+};
+
 const generateSlug = (text) => {
   if (!text) return '';
   const ukrToLat = {
@@ -38,7 +56,6 @@ const generateSlug = (text) => {
 // ==========================================
 // НАЛАШТУВАННЯ CLOUDINARY ТА MULTER
 // ==========================================
-
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -53,35 +70,82 @@ const storage = new CloudinaryStorage({
     public_id: (req, file) => `${Date.now()}-${file.originalname.split('.')[0]}`,
   },
 });
-
 const upload = multer({ storage: storage });
 
 // ==========================================
-// API МАРШРУТИ
+// API АВТОРИЗАЦІЇ
 // ==========================================
 
-// --- ТОВАРИ ---
+// Маршрут для логіну адміна
+app.post('/api/admin/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const admin = await prisma.admin.findUnique({ where: { email } });
+    if (!admin) {
+      return res.status(401).json({ error: "Неправильний email або пароль" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, admin.passwordHash);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Неправильний email або пароль" });
+    }
+
+    // Генеруємо токен, дійсний 24 години
+    const token = jwt.sign({ id: admin.id, email: admin.email }, JWT_SECRET, { expiresIn: '24h' });
+    
+    res.json({ token, message: "Успішний вхід" });
+  } catch (error) {
+    console.error("Помилка логіну:", error);
+    res.status(500).json({ error: "Помилка сервера" });
+  }
+});
+
+// Службовий маршрут для СТВОРЕННЯ ПЕРШОГО АДМІНА (Видали його після використання на продакшені!)
+app.post('/api/admin/setup', async (req, res) => {
+  try {
+    const adminCount = await prisma.admin.count();
+    if (adminCount > 0) {
+      return res.status(400).json({ error: "Адміністратор вже існує." });
+    }
+
+    const { email, password } = req.body;
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const newAdmin = await prisma.admin.create({
+      data: { email, passwordHash }
+    });
+
+    res.json({ message: "Першого адміністратора успішно створено!", email: newAdmin.email });
+  } catch (error) {
+    res.status(500).json({ error: "Помилка створення адміна" });
+  }
+});
+
+// ==========================================
+// API МАРШРУТИ (ТОВАРИ ТА ПРОДАВЦІ)
+// ==========================================
+
+// Читання доступне всім (без authenticateToken)
 app.get('/api/products', async (req, res) => {
   try {
-    const products = await prisma.product.findMany({
-      include: { seller: true, category: true }
-    });
+    const products = await prisma.product.findMany({ include: { seller: true, category: true } });
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: "Помилка при отриманні товарів" });
   }
 });
 
-app.post('/api/products', upload.single('image'), async (req, res) => {
+// Створення та зміна доступні ТІЛЬКИ авторизованим (додано authenticateToken)
+app.post('/api/products', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const { name, description, price, categoryId, sellerId, slug, isRecommended, showOnHome, inStock, imageUrl: bodyImageUrl } = req.body;
-    
     const finalImageUrl = req.file ? req.file.path : (bodyImageUrl || null);
 
     const newProduct = await prisma.product.create({
       data: {
         name,
-        // Використовуємо транслітерацію для нових товарів
         slug: slug || `${generateSlug(name)}-${Date.now().toString().slice(-4)}`,
         description,
         price: parseFloat(price),
@@ -100,7 +164,7 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
   }
 });
 
-app.put('/api/products/:id/status', async (req, res) => {
+app.put('/api/products/:id/status', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { showOnHome, isPromoted, inStock } = req.body;
@@ -115,15 +179,13 @@ app.put('/api/products/:id/status', async (req, res) => {
       data: updateData,
       include: { seller: true, category: true }
     });
-
     res.json(updatedProduct);
   } catch (error) {
-    console.error("Помилка оновлення статусу:", error);
     res.status(500).json({ error: "Помилка при оновленні статусу товару" });
   }
 });
 
-app.put('/api/products/:id', upload.single('image'), async (req, res) => {
+app.put('/api/products/:id', authenticateToken, upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, price, categoryId, sellerId, isRecommended, showOnHome, inStock, imageUrl: bodyImageUrl } = req.body;
@@ -132,12 +194,8 @@ app.put('/api/products/:id', upload.single('image'), async (req, res) => {
     if (!existingProduct) return res.status(404).json({ error: "Товар не знайдено" });
 
     let finalImageUrl = existingProduct.imageUrl;
-    
-    if (req.file) {
-      finalImageUrl = req.file.path; 
-    } else if (bodyImageUrl !== undefined) {
-      finalImageUrl = bodyImageUrl; 
-    }
+    if (req.file) finalImageUrl = req.file.path; 
+    else if (bodyImageUrl !== undefined) finalImageUrl = bodyImageUrl; 
 
     const updateData = {
       name: name || existingProduct.name,
@@ -157,10 +215,8 @@ app.put('/api/products/:id', upload.single('image'), async (req, res) => {
       data: updateData,
       include: { seller: true, category: true }
     });
-
     res.json(updatedProduct);
   } catch (error) {
-    console.error("Помилка оновлення:", error);
     res.status(500).json({ error: "Помилка при оновленні товару" });
   }
 });
@@ -175,10 +231,9 @@ app.get('/api/sellers', async (req, res) => {
   }
 });
 
-app.post('/api/sellers', upload.single('logo'), async (req, res) => {
+app.post('/api/sellers', authenticateToken, upload.single('logo'), async (req, res) => {
   try {
     const { name, description, phone, telegram, slug, logoUrl: bodyLogoUrl } = req.body;
-    
     const finalLogoUrl = req.file ? req.file.path : (bodyLogoUrl || null);
 
     const newSeller = await prisma.seller.create({
@@ -198,7 +253,7 @@ app.post('/api/sellers', upload.single('logo'), async (req, res) => {
   }
 });
 
-app.put('/api/sellers/:id', upload.single('logo'), async (req, res) => {
+app.put('/api/sellers/:id', authenticateToken, upload.single('logo'), async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, phone, telegram, logoUrl: bodyLogoUrl } = req.body;
@@ -207,11 +262,8 @@ app.put('/api/sellers/:id', upload.single('logo'), async (req, res) => {
     if (!existingSeller) return res.status(404).json({ error: "Продавця не знайдено" });
 
     let finalLogoUrl = existingSeller.logoUrl;
-    if (req.file) {
-      finalLogoUrl = req.file.path;
-    } else if (bodyLogoUrl !== undefined) {
-      finalLogoUrl = bodyLogoUrl;
-    }
+    if (req.file) finalLogoUrl = req.file.path;
+    else if (bodyLogoUrl !== undefined) finalLogoUrl = bodyLogoUrl;
 
     const updatedSeller = await prisma.seller.update({
       where: { id: parseInt(id) },
@@ -223,22 +275,19 @@ app.put('/api/sellers/:id', upload.single('logo'), async (req, res) => {
         logoUrl: finalLogoUrl,
       }
     });
-
     res.json(updatedSeller);
   } catch (error) {
-    console.error("Помилка оновлення продавця:", error);
     res.status(500).json({ error: "Помилка при оновленні продавця" });
   }
 });
 
 // --- ЗАМОВЛЕННЯ ---
-app.get('/api/orders', async (req, res) => {
+app.get('/api/orders', authenticateToken, async (req, res) => {
+  // Читати замовлення може тільки адмін
   try {
     const orders = await prisma.order.findMany({
       include: { 
-        orderItems: {
-          include: { product: true } // Підтягуємо сам товар, щоб мати його ім'я
-        } 
+        orderItems: { include: { product: true } } 
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -246,7 +295,6 @@ app.get('/api/orders', async (req, res) => {
       ...order,
       items: order.orderItems.map(item => ({
         ...item,
-        // Якщо товар був видалений, показуємо заглушку, інакше — його реальне ім'я
         name: item.product ? item.product.name : `Видалений товар (ID: ${item.productId})`
       }))
     }));
@@ -257,6 +305,7 @@ app.get('/api/orders', async (req, res) => {
 });
 
 app.post('/api/orders', async (req, res) => {
+  // Створювати замовлення можуть всі (покупці)
   try {
     const { customerName, customerPhone, city, postBranch, comment, totalPrice, items } = req.body;
     const newOrder = await prisma.order.create({
@@ -285,19 +334,16 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-app.put('/api/orders/:id', async (req, res) => {
+app.put('/api/orders/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    
     const updatedOrder = await prisma.order.update({
       where: { id: parseInt(id) },
       data: { status }
     });
-    
     res.json(updatedOrder);
   } catch (error) {
-    console.error("Помилка оновлення замовлення:", error);
     res.status(500).json({ error: "Не вдалося оновити статус" });
   }
 });
